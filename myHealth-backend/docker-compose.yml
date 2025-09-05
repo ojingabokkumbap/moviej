@@ -1,0 +1,59 @@
+services:
+  db:
+    image: mysql:8
+    container_name: myhealth-db
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpw
+      MYSQL_DATABASE: mydb
+      # MYSQL_USER: user
+      # MYSQL_PASSWORD: userpw
+      MYSQL_USER: yooheez
+      MYSQL_PASSWORD: Y5NZ2bozuoOj63yxIbeV
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "yooheez", "-pY5NZ2bozuoOj63yxIbeV"]
+      timeout: 20s
+      retries: 10
+      start_period: 40s
+      interval: 15s
+    networks:
+      - backend
+
+  app:
+    build: .
+    container_name: myhealth-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    restart: on-failure:3
+    networks:
+      - backend
+
+  frontend:
+    build:
+      context: ../myHealth-frontend
+      dockerfile: Dockerfile
+    container_name: myhealth-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - app
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  mysql_data:

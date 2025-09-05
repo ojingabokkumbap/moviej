@@ -1,0 +1,33 @@
+# Build 결과물
+build/
+bin/
+.gradle/
+
+# IDE 파일들
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS 파일들
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker 파일들
+*.dockerfile
+docker-compose*.yml
+
+# 로그 파일들
+*.log
+
+# 임시 파일들
+*.tmp
+*.temp
+
+# Node modules (만약 있다면)
+node_modules/
