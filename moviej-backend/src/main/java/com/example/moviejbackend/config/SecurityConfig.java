@@ -1,4 +1,4 @@
-package com.example.myhealth.config;
+package com.example.moviejbackend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,25 +26,17 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
         // 허용할 오리진 (프론트엔드 주소)
         configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000",   // React 기본 포트
-            "http://localhost:4200",   // Angular 기본 포트
-            "http://localhost:8081",   // Vue.js 기본 포트
-            "http://localhost:5173",   // Vite 기본 포트
-            "http://127.0.0.1:5500"    // Live Server 기본 포트
+            "http://localhost:3000",
+            "http://localhost:4200",
+            "http://localhost:8081",
+            "http://localhost:5173",
+            "http://127.0.0.1:5500"
         ));
-        
-        // 허용할 HTTP 메서드
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        
-        // 허용할 헤더
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        
-        // 인증 정보 포함 허용
         configuration.setAllowCredentials(true);
-        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

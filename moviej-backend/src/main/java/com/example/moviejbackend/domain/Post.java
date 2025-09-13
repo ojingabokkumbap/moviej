@@ -1,4 +1,4 @@
-package com.example.myhealth.domain;
+package com.example.moviejbackend.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -32,12 +32,11 @@ public class Post {
     @Column(nullable = false) // 작성 시간은 null이 될 수 없음
     private LocalDateTime createdAt; // 게시글 작성 시간
 
-    
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
-    
+
     @Column
     private String imageUrl; // 이미지 파일명 또는 URL
 }

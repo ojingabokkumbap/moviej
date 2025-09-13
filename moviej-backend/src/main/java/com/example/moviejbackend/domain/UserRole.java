@@ -1,4 +1,4 @@
-package com.example.myhealth.domain;
+package com.example.moviejbackend.domain;
 
 public enum UserRole {
     ADMIN,

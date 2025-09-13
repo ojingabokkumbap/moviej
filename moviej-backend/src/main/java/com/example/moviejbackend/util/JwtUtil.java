@@ -1,4 +1,4 @@
-package com.example.myhealth.util;
+package com.example.moviejbackend.util;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

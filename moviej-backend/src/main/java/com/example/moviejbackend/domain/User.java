@@ -1,4 +1,4 @@
-package com.example.myhealth.domain;
+package com.example.moviejbackend.domain;
 
 import jakarta.persistence.*;
 import lombok.*;

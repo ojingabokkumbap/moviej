@@ -1,6 +1,6 @@
-package com.example.myhealth.repository;
+package com.example.moviejbackend.repository;
 
-import com.example.myhealth.domain.Post;
+import com.example.moviejbackend.domain.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
