@@ -322,9 +322,6 @@ export default function MoviesPage() {
     { name: "추리", id: 9648 },
   ];
 
-  console.log(
-    `Movies Page - 장르: ${selectedGenre}, 그리드 영화: ${gridMovies.length}개, 캐러셀 영화: ${movies.length}개`
-  );
   return (
     <main className="flex flex-col items-center justify-center mt-[10rem] w-full">
       <div className="flex items-center w-max mb-10">
@@ -362,7 +359,7 @@ export default function MoviesPage() {
                   ? "opacity-100"
                   : posIdx === 1 || posIdx === 3
                   ? "opacity-85"
-                  : "opacity-76";
+                  : "opacity-80";
               const z = 10 - Math.abs(2 - posIdx);
 
               // posIdx별로 translateX 값 다르게
@@ -376,12 +373,12 @@ export default function MoviesPage() {
               let clipPath = undefined;
 
               if (posIdx === 0 || posIdx === 1) {
-                // 왼쪽 두 이미지 사다리꼴
-                clipPath = "polygon(0 0, 100% 10%, 100% 85%, 0 100%)";
+                // 오른쪽만 기울임 (왼쪽은 그대로)
+                clipPath = "polygon(0px 26px, 100% 12%, 100% 80%, 0px 95%)";
               }
               if (posIdx === 3 || posIdx === 4) {
-                // 오른쪽 두 이미지 사다리꼴
-                clipPath = "polygon(0 15%, 100% 0, 100% 100%, 0 85%)";
+                // 왼쪽만 기울임 (오른쪽은 그대로)
+                clipPath = "polygon(0px 15%, 100% 25px, 100% 94%, 0px 87%)";
               }
 
               return (
@@ -432,7 +429,7 @@ export default function MoviesPage() {
                         {/* 연령등급 라벨 */}
                         <div className="flex items-center justify-start tracking-wider text-sm gap-2 opacity-90">
                           <div
-                            className={`px-1.5 py-1 rounded text-white text-sm font-bold ${getRatingColor(
+                            className={`px-1.5 py-0.5 rounded text-white text-sm font-bold ${getRatingColor(
                               getDisplayRating(
                                 carouselMovies[imgIdx],
                                 actualRatings
@@ -444,7 +441,7 @@ export default function MoviesPage() {
                               actualRatings
                             )}
                           </div>
-                          <span className="px-2 py-0.5  border border-gray-300 font-light">
+                          <span className="py-0.5  font-light">
                             {carouselRuntimes[carouselMovies[imgIdx].id]
                               ? `${
                                   carouselRuntimes[carouselMovies[imgIdx].id]
@@ -468,10 +465,10 @@ export default function MoviesPage() {
                           {carouselCasts[carouselMovies[imgIdx].id]?.length >
                             0 && (
                             <span>
-                              출연:{" "}
                               {carouselCasts[carouselMovies[imgIdx].id]
                                 .slice(0, 3)
-                                .join(", ")}
+                                .join(", ")}{" "}
+                              출연
                             </span>
                           )}
                         </div>

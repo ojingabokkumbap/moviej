@@ -7,13 +7,15 @@ export default function TasteMovies() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleLogin = (email: string, password: string) => {
-    console.log("로그인 시도:", email, password);
+    // console.log("로그인 시도:", email, password);
     // 여기에 실제 로그인 로직 구현
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSignUp = (email: string, nickname: string, password: string) => {
-    console.log("회원가입 시도:", email, nickname, password);
+    // console.log("회원가입 시도:", email, nickname, password);
     // 여기에 실제 회원가입 로직 구현
   };
 

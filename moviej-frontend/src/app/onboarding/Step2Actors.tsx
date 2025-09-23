@@ -47,26 +47,6 @@ const DOMESTIC_ACTORS = [
   "이선균",
   "김다미",
   "박은빈",
-  "한지민",
-  "공효진",
-  "진선규",
-  "정우성",
-  "하정우",
-  "류준열",
-  "박소담",
-  "박서준",
-  "윤계상",
-  "염정아",
-  "차태현",
-  "배두나",
-  "이성민",
-  "박보검",
-  "송중기",
-  "강동원",
-  "이하늬",
-  "유해진",
-  "류승룡",
-  "김해숙",
 ];
 
 // 해외 인기 배우 리스트
@@ -101,26 +81,6 @@ const INTERNATIONAL_ACTORS = [
   "Robert De Niro",
   "Christian Bale",
   "Jennifer Lawrence",
-  "Mark Ruffalo",
-  "Michael Fassbender",
-  "Jeremy Renner",
-  "Jason Momoa",
-  "Vin Diesel",
-  "Dwayne Johnson",
-  "Sylvester Stallone",
-  "Angelina Jolie",
-  "Arnold Schwarzenegger",
-  "Jack Nicholson",
-  "Tom Hanks",
-  "Cate Blanchett",
-  "Jamie Foxx",
-  "Daniel Craig",
-  "Jude Law",
-  "Gerard Butler",
-  "Colin Farrell",
-  "Sean Penn",
-  "Javier Bardem",
-  "Scarlett Johansson",
 ];
 
 // TMDB에서 배우 정보를 검색하는 함수
@@ -396,9 +356,9 @@ export default function Step2Actors({
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     class="icon icon-tabler icons-tabler-outline icon-tabler-x"
                   >
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -425,9 +385,9 @@ export default function Step2Actors({
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
             class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left"
           >
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -465,9 +425,9 @@ export default function Step2Actors({
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
                 class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"
               >
                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />

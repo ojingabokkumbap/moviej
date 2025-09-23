@@ -14,17 +14,14 @@ export function useMoviesKOFIC() {
   const targetDt = `${yyyy}${mm}${dd}`;
 
   useEffect(() => {
-    console.log("useMoviesKOFIC 렌더링, targetDt:", targetDt, "apiKey:", apiKey);
     // 박스오피스 데이터
     fetch(
       `https://kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=${apiKey}&targetDt=${targetDt}`
     )
       .then((res) => {
-        console.log("박스오피스 fetch status:", res.status, res.statusText);
         return res.json();
       })
       .then(async (data) => {
-        console.log("박스오피스 fetch 결과:", data);
         const list = data.boxOfficeResult?.dailyBoxOfficeList || [];
         setBoxOffice(list);
 

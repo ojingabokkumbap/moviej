@@ -60,7 +60,7 @@ export default function BestReview() {
   const visibleIndexes = getVisibleIndexes();
 
   return (
-    <div className="flex w-full mt-5 h-[430px]">
+    <div className="flex w-full h-[430px]">
       <div className="flex-col justify-start w-2/6 py-20 pr-10">
         <div className="h-4/5">
           <p>{reviews[selectedIdx].genre}</p>
@@ -70,7 +70,7 @@ export default function BestReview() {
           </p>
           <p className="flex gap-2 mb-2 items-center">
             <svg
-              className="w-5 h-5 text-yellow-400"
+              className="w-5 h-5 text-gray-400"
               fill="currentColor"
               viewBox="0 0 20 20"
             >

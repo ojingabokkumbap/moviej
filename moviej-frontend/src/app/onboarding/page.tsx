@@ -35,10 +35,6 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     try {
-      // 여기에 서버로 데이터 전송 로직 추가
-      console.log("온보딩 완료 데이터:", formData);
-      
-      // 임시: localStorage에 저장
       localStorage.setItem('userPreferences', JSON.stringify(formData));
       
       // 메인 페이지로 이동

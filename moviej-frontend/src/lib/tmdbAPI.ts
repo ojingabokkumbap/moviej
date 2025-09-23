@@ -75,7 +75,6 @@ export async function fetchTMDBPosterByTitle(title: string, year?: string) {
     const data = await res.json();
     
     if (!data.results || data.results.length === 0) {
-      console.log(`🔍 TMDB에서 "${title}" 검색 결과 없음`);
       return null;
     }
     
@@ -92,11 +91,6 @@ export async function fetchTMDBPosterByTitle(title: string, year?: string) {
     const posterPath = bestMatch?.poster_path;
     const imageUrl = posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : null;
     
-    if (imageUrl) {
-      console.log(`✅ TMDB 이미지 찾음: "${title}" -> ${bestMatch.title} (${bestMatch.release_date?.slice(0, 4)})`);
-    } else {
-      console.log(`❌ TMDB 포스터 없음: "${title}"`);
-    }
     
     return imageUrl;
   } catch (error) {

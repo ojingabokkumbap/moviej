@@ -255,7 +255,7 @@ export default function Header() {
                     <button
                       onClick={() => {
                         // 로그아웃 로직
-                        console.log('로그아웃');
+                        // console.log('로그아웃');
                         setIsProfileOpen(false);
                       }}
                       className="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors"

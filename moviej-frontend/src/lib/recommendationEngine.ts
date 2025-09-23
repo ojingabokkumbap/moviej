@@ -577,7 +577,8 @@ export class MovieRecommendationEngine {
 
   private async invalidateRecommendationCache(userId: string): Promise<void> {
     // 실제 구현에서는 Redis 등의 캐시에서 해당 사용자의 추천 캐시 삭제
-    console.log(`Invalidating recommendation cache for user: ${userId}`);
+    // console.log(`Invalidating recommendation cache for user: ${userId}`);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   }
 }
 

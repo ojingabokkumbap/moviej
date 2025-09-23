@@ -14,8 +14,7 @@ export default function Home() {
   const { movies, logos, genreMap } = useMoviesTMDB();
   const [startIdx, setStartIdx] = useState(0);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(0);
-  const [isMounted, setIsMounted] = useState(false); //
-  const [isAutoPlay, setIsAutoPlay] = useState(true); // 자동 재생 상태 추가
+  const [isMounted, setIsMounted] = useState(false);
   const [progress, setProgress] = useState(0); // 타이머 진행률 추가
   const visibleMovies = movies.slice(startIdx, startIdx + 4);
 
@@ -27,15 +26,14 @@ export default function Home() {
 
   /* 자동재생 */
   useEffect(() => {
-    if (movies.length === 0 || !isAutoPlay) {
-      // 자동 재생 중지 시 진행률 유지 (초기화하지 않음)
+    if (movies.length === 0) {
       return;
     }
 
     const duration = 10000; // 10초
     const step = 100; // 100ms마다 업데이트
     const steps = duration / step;
-    let currentStep = Math.floor((progress / 100) * steps); // 현재 진행률에 기반하여 시작
+    let currentStep = 0;
 
     const interval = setInterval(() => {
       currentStep++;
@@ -52,25 +50,13 @@ export default function Home() {
           return nextIdx;
         });
         setSelectedIdx(0);
-        setProgress(0); // 완료 시에만 초기화
+        setProgress(0); // 완료 시 초기화
         currentStep = 0;
       }
     }, step);
 
     return () => clearInterval(interval);
-  }, [movies.length, isAutoPlay, progress]); // progress를 의존성에 추가
-
-  // 수동 클릭 시 타이머 리셋을 위한 useEffect 추가
-  useEffect(() => {
-    if (!isAutoPlay) {
-      setProgress(0); // 수동 클릭 시 진행률 초기화
-      const timer = setTimeout(() => {
-        setIsAutoPlay(true);
-      }, 10000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [startIdx, selectedIdx, isAutoPlay]);
+  }, [movies.length, startIdx]);
 
   useEffect(() => {
     async function getCredits() {
@@ -101,9 +87,15 @@ export default function Home() {
     setSelectedIdx(0);
   };
 
-  const handlePlayPause = () => {
-    setIsAutoPlay(!isAutoPlay); // 상태 토글
-    // 정지 시 진행률 유지, 재생 시 현재 상태부터 이어서 진행
+  const handleNext = () => {
+    setStartIdx((prev) => {
+      const nextIdx = prev + 1;
+      if (nextIdx >= movies.length - 3) {
+        return 0;
+      }
+      return nextIdx;
+    });
+    setSelectedIdx(0);
   };
 
   const handleDetailClick = () => {
@@ -113,12 +105,8 @@ export default function Home() {
     }
   };
 
-  // 포스터 클릭 시에도 자동 재생 토글
+  // 포스터 클릭
   const handlePosterClick = (idx: number) => {
-    setIsAutoPlay(!isAutoPlay); // 자동 재생 상태 토글
-    if (!isAutoPlay) {
-      setProgress(0);
-    }
     setSelectedIdx(idx);
   };
 
@@ -266,8 +254,7 @@ export default function Home() {
               </svg>
             </button>
             <button
-              onClick={handlePlayPause}
-              disabled={startIdx >= movies.length - 1}
+              onClick={handleNext}
               className="z-20 absolute bottom-[-110px] right-[-120px] shadow"
             >
               <svg width="100" height="68" viewBox="0 0 50 48">
@@ -287,7 +274,7 @@ export default function Home() {
                   cy="35"
                   r="20"
                   fill="none"
-                  stroke={isAutoPlay ? "#8b5cf6" : "#666666"}
+                  stroke="#8b5cf6"
                   strokeWidth="3"
                   strokeLinecap="round"
                   transform="rotate(-90 25 25)"
@@ -296,49 +283,27 @@ export default function Home() {
                     2 * Math.PI * 20 * (1 - progress / 100)
                   }`}
                   style={{
-                    transition: isAutoPlay
-                      ? "stroke-dashoffset 0.1s linear"
-                      : "none",
+                    transition: "stroke-dashoffset 0.1s linear",
                   }}
                 />
                 {/* 중앙 아이콘 */}
-                {isAutoPlay ? (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#bcbcbc"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"
-                    x="23"
-                    y="15"
-                  >
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M9 6l6 6l-6 6" />
-                  </svg>
-                ) : (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#bcbcbc"
-                    stroke-width="1"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    x="23"
-                    y="15"
-                  >
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M6 5m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z" />
-                    <path d="M14 5m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z" />
-                  </svg>
-                )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#bcbcbc"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"
+                  x="23"
+                  y="15"
+                >
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M9 6l6 6l-6 6" />
+                </svg>
               </svg>
             </button>
           </div>
@@ -348,7 +313,7 @@ export default function Home() {
                 key={movie.id}
                 src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
                 alt={movie.title}
-                className={`w-32 h-48 object-cover shadow cursor-pointer w-[150px] h-[250px] transition-all duration-300 ${
+                className={`w-[150px] h-[250px] object-cover shadow cursor-pointer transition-all duration-300 ${
                   selectedIdx === idx
                     ? ""
                     : "opacity-75 hover:scale-100 hover:opacity-100"
@@ -380,7 +345,7 @@ export default function Home() {
         <NewMovies />
       </div> */}
       <div className="w-full ml-24 mb-10">
-        <p className="text-3xl font-medium text-left">인기 감상평</p>
+        <p className="text-3xl font-medium text-left mt-5">인기 감상평</p>
         <BestReview />
       </div>
     </main>

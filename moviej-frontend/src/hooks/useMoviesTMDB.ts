@@ -121,7 +121,6 @@ export function useMoviesTMDB() {
           index === self.findIndex(m => m.id === movie.id)
         );
 
-        console.log(`총 ${uniqueMovies.length}개의 영화 데이터를 로드했습니다.`);
 
         // 처음 50개 영화에 대해서만 로고 받아오기
         const movieLogoPairs = await Promise.all(
@@ -136,7 +135,6 @@ export function useMoviesTMDB() {
         const filteredMovies = filteredPairs.map(pair => pair.movie);
         const filteredLogos = filteredPairs.map(pair => pair.logo as string); // null이 아님을 보장
         
-        console.log(`로고가 있는 영화: ${filteredMovies.length}개`);
         
         setMovies(filteredMovies);
         setLogos(filteredLogos);
@@ -193,26 +191,57 @@ export function useUpcomingTMDB() {
 }
 
 // KOFIC 데이터를 TMDB에서 영화 제목으로 검색 결과 받아오는 공통 함수
-async function searchTMDBMovieByTitle(title: string) {
-  const res = await fetch(
-    `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(
-      title
-    )}&language=ko-KR`
-  );
+async function searchTMDBMovieByTitle(title: string, releaseYear?: string) {
+  let url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(title)}&language=ko-KR`;
+  
+  // 연도가 있으면 primary_release_year 파라미터 추가
+  if (releaseYear) {
+    url += `&primary_release_year=${releaseYear}`;
+  }
+  
+  const res = await fetch(url);
   const data = await res.json();
-  return data.results?.[0] || null;
+  
+  if (data.results && data.results.length > 0) {
+    // 연도가 주어진 경우, 해당 연도와 가장 가까운 영화를 찾기
+    if (releaseYear) {
+      return data.results[0]; // primary_release_year로 필터링된 첫 번째 결과
+    } else {
+      // 연도가 없으면 가장 최신 영화 반환 (release_date 기준 정렬)
+      return data.results.sort((a: any, b: any) => 
+        new Date(b.release_date || '1900-01-01').getTime() - 
+        new Date(a.release_date || '1900-01-01').getTime()
+      )[0];
+    }
+  }
+  
+  return null;
 }
 
 /* KOFIC 영화 제목으로 TMDB 포스터 가져오기 */
-export async function fetchTMDBPosterByTitle(title: string) {
-  const movie = await searchTMDBMovieByTitle(title);
+export async function fetchTMDBPosterByTitle(title: string, releaseYear?: string) {
+  // 첫 번째 시도: 연도가 있으면 연도 포함해서 검색
+  let movie = await searchTMDBMovieByTitle(title, releaseYear);
+  
+  // 첫 번째 시도에서 결과가 없고 연도가 있었다면, 연도 없이 재시도
+  if (!movie && releaseYear) {
+    movie = await searchTMDBMovieByTitle(title);
+  }
+  
   const posterPath = movie?.poster_path;
   return posterPath ? `https://image.tmdb.org/t/p/w500${posterPath}` : null;
 }
 
 /* KOFIC 영화 제목으로 TMDB 장르와 개요 가져오기 */
-export async function fetchTMDBInfoByTitle(title: string) {
-  const movie = await searchTMDBMovieByTitle(title);
+export async function fetchTMDBInfoByTitle(title: string, releaseYear?: string) {
+  // 첫 번째 시도: 연도가 있으면 연도 포함해서 검색
+  let movie = await searchTMDBMovieByTitle(title, releaseYear);
+  
+  // 첫 번째 시도에서 결과가 없고 연도가 있었다면, 연도 없이 재시도
+  if (!movie && releaseYear) {
+    movie = await searchTMDBMovieByTitle(title);
+  }
+  
   if (!movie) return { overview: null, genres: [], vote_average: null };
 
   // 장르 ID → 장르명 변환

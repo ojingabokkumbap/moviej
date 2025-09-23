@@ -29,7 +29,7 @@ const mockNews = [
     content:
       "혁신적인 AI 기술을 활용해 제작된 장편 영화가 영화계에 큰 화제를 모으고 있습니다...",
     thumbnail:
-      "https://image.tmdb.org/t/p/w500/x2LSRK2Cm7MZhjluni1msVJ3wDF.jpg",
+      "https://cdn.aipostkorea.com/news/photo/202312/577_1087_4054.jpeg",
     category: "기술",
     author: "테크 시네마",
     publishedAt: "2025-01-12",
@@ -43,7 +43,7 @@ const mockNews = [
       "디즈니가 2025년 픽사 애니메이션 신작들을 공개했습니다. 토이 스토리 5와 인크레더블 3가 포함되어 있습니다.",
     content: "디즈니가 D23 엑스포에서 픽사의 새로운 작품들을 발표했습니다...",
     thumbnail:
-      "https://image.tmdb.org/t/p/w500/aKbulUG3weFzipR0xsQ3z7aDXLv.jpg",
+      "https://cdn.sanity.io/images/v31psllp/production/f9bac733886a1f74f823ad5573d5042d25bd4a15-720x450.webp?auto=format&fit=max&q=75&w=700",
     category: "개봉 소식",
     author: "애니메이션 뉴스",
     publishedAt: "2025-01-10",
@@ -84,7 +84,7 @@ const mockNews = [
     summary:
       "2025년 슈퍼히어로 영화들이 보여주는 새로운 트렌드와 변화를 분석해봅니다.",
     content: "슈퍼히어로 영화 장르의 새로운 변화를 살펴봅니다...",
-    thumbnail: "https://image.tmdb.org/t/p/w500/qAKvGA39dyy1H7hf0m4mTGvkzr.jpg",
+    thumbnail: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/D994/production/_108000755_0a.gettyimages-1147057895.jpg.webp",
     category: "개봉 소식",
     author: "슈퍼히어로 매거진",
     publishedAt: "2025-01-03",
@@ -164,7 +164,7 @@ const mockNews = [
     title: "어벤져스 새로운 시대 예고",
     summary: "마블이 공개한 어벤져스 새로운 팀 구성과 향후 계획을 살펴봅니다.",
     content: "어벤져스의 새로운 시대에 대해 알아봅니다...",
-    thumbnail: "https://image.tmdb.org/t/p/w500/qAKvGA39dyy1H7hf0m4mTGvkzr.jpg",
+    thumbnail: "https://image-cdn.hypb.st/https%3A%2F%2Fkr.hypebeast.com%2Ffiles%2F2019%2F03%2Favengers-casting-final-0-1.jpg?w=960&cbr=1&q=90&fit=max",
     category: "개봉 소식",
     author: "마블 인사이더",
     publishedAt: "2024-12-18",
@@ -321,7 +321,7 @@ export default function NewsPage() {
   const regularNews = filteredNews.slice(0, 6);
 
   return (
-    <main className="min-h-screen bg-gray-900 text-white pt-20">
+    <main className="min-h-scree text-white pt-20">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* 헤더 */}
         <div className="mb-8">
@@ -399,7 +399,7 @@ export default function NewsPage() {
                               clipRule="evenodd"
                             />
                           </svg>
-                          <span className="text-orange-400 font-bold">
+                          <span className="text-orange-400 font-semibold">
                             {article.views.toLocaleString()}
                           </span>
                         </div>
@@ -470,7 +470,6 @@ export default function NewsPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-400">정렬:</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}

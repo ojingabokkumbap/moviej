@@ -72,37 +72,11 @@ const mockNews = [
   // 더 많은 뉴스 데이터...
 ];
 
-// 댓글 데이터
-const mockComments = [
-  {
-    id: 1,
-    author: "영화광",
-    content: "드디어 아바타 3가 나오는군요! 너무 기대됩니다.",
-    publishedAt: "2025-01-15T10:30:00Z",
-    likes: 24,
-  },
-  {
-    id: 2,
-    author: "판도라팬",
-    content: "제임스 카메론의 기술력은 정말 대단해요. 이번에는 어떤 혁신을 보여줄까요?",
-    publishedAt: "2025-01-15T11:15:00Z",
-    likes: 18,
-  },
-  {
-    id: 3,
-    author: "SF매니아",
-    content: "화산 지역 설정이 흥미롭네요. 물의 길과는 완전히 다른 느낌일 것 같아요.",
-    publishedAt: "2025-01-15T12:00:00Z",
-    likes: 15,
-  },
-];
 
 export default function NewsDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [article, setArticle] = useState<any>(null);
-  const [comments, setComments] = useState(mockComments);
-  const [newComment, setNewComment] = useState("");
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
 
@@ -120,20 +94,6 @@ export default function NewsDetailPage() {
     setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
   };
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newComment.trim()) {
-      const comment = {
-        id: comments.length + 1,
-        author: "사용자", // 실제로는 로그인한 사용자 이름
-        content: newComment,
-        publishedAt: new Date().toISOString(),
-        likes: 0,
-      };
-      setComments([...comments, comment]);
-      setNewComment("");
-    }
-  };
 
   if (!article) {
     return (
@@ -250,67 +210,6 @@ export default function NewsDetailPage() {
             ))}
           </div>
         </div>
-
-        {/* 댓글 섹션 */}
-        <section className="border-t border-gray-700 pt-8">
-          <h3 className="text-2xl font-bold text-white mb-6">
-            댓글 ({comments.length})
-          </h3>
-
-          {/* 댓글 작성 폼 */}
-          <form onSubmit={handleCommentSubmit} className="mb-8">
-            <div className="mb-4">
-              <textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="댓글을 작성해주세요..."
-                rows={4}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-violet-500 resize-none"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={!newComment.trim()}
-              className="px-6 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
-            >
-              댓글 작성
-            </button>
-          </form>
-
-          {/* 댓글 목록 */}
-          <div className="space-y-6">
-            {comments.map((comment) => (
-              <div key={comment.id} className="bg-gray-800 rounded-lg p-6">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                      {comment.author[0]}
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-white">{comment.author}</h4>
-                      <p className="text-xs text-gray-400">
-                        {new Date(comment.publishedAt).toLocaleDateString('ko-KR', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                  <button className="flex items-center space-x-1 text-gray-400 hover:text-white transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                    <span className="text-sm">{comment.likes}</span>
-                  </button>
-                </div>
-                <p className="text-gray-300 leading-relaxed">{comment.content}</p>
-              </div>
-            ))}
-          </div>
-        </section>
 
         {/* 관련 뉴스 */}
         <section className="border-t border-gray-700 pt-8 mt-12">

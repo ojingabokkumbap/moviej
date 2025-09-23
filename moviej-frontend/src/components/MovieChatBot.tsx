@@ -391,7 +391,7 @@ export default function MovieChatBot() {
       {/* 챗봇 버튼 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full shadow-lg transition-all duration-300 ${
+        className={`fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full shadow-lg transition-all duration-300 hidden ${
           isOpen 
             ? "bg-gray-700 hover:bg-gray-600" 
             : "bg-violet-600 hover:bg-violet-700"
