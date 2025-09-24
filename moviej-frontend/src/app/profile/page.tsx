@@ -10,8 +10,8 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+} from "chart.js";
+import { Bar } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
@@ -159,7 +159,56 @@ export default function MovieNotePage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">내정보</h1>
         </div>
-
+        {/* 프로필 카드 */}
+        <div className="p-8 ">
+          <div className="flex items-center gap-6 mb-6">
+            <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-700">
+              <div className="w-full h-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
+                <span className="text-3xl font-bold text-white">
+                  {userProfile.username.charAt(0)}
+                </span>
+              </div>
+            </div>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold mb-2">
+                {userProfile.username}
+              </h2>
+              <div className="flex text-gray-400 flex-col">
+                <span>가입일: {userProfile.joinDate.toLocaleDateString()}</span>
+                <span>활동 {getActivityDays()}일째</span>
+              </div>
+            </div>
+          </div>
+          {/* 통계 요약 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-gray-800 rounded-lg p-6 text-center">
+              <div className="text-gray-400">총 시청 영화</div>
+              <div className="text-3xl font-bold text-violet-400 mb-2">
+                {userProfile.totalMoviesWatched}
+              </div>
+            </div>
+            <div className="bg-gray-800 rounded-lg p-6 text-center">
+              <div className="text-gray-400">평균 평점</div>
+              <div
+                className={`text-3xl font-bold mb-2 ${getLevelColor(
+                  userProfile.averageRating
+                )}`}
+              >
+                {userProfile.averageRating.toFixed(1)}★
+              </div>
+            </div>
+            <div className="bg-gray-800 rounded-lg p-6 text-center">
+              <div className="text-gray-400">총 시청 시간</div>
+              <div className="text-3xl font-bold text-green-400 mb-2">
+                {Math.floor(
+                  watchedMovies.reduce((acc, movie) => acc + movie.runtime, 0) /
+                    60
+                )}
+                h
+              </div>
+            </div>
+          </div>
+        </div>
         {/* 탭 네비게이션 */}
         <div className="flex gap-6 mb-8 border-b border-gray-700">
           {[
@@ -184,229 +233,181 @@ export default function MovieNotePage() {
         {/* 대시보드 */}
         {activeTab === "dashboard" && (
           <div className="space-y-8">
-            {/* 프로필 카드 */}
-            <div className="bg-gray-900 rounded-xl p-8 border border-gray-700">
-              <div className="flex items-center gap-6 mb-6">
-                <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-700">
-                  <div className="w-full h-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
-                    <span className="text-3xl font-bold text-white">
-                      {userProfile.username.charAt(0)}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold mb-2">
-                    {userProfile.username}
-                  </h2>
-                  <div className="flex items-center gap-4 text-gray-400">
-                    <span>
-                      가입일: {userProfile.joinDate.toLocaleDateString()}
-                    </span>
-                    <span>활동 {getActivityDays()}일째</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 통계 요약 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-gray-800 rounded-lg p-6 text-center">
-                  <div className="text-3xl font-bold text-violet-400 mb-2">
-                    {userProfile.totalMoviesWatched}
-                  </div>
-                  <div className="text-gray-400">총 시청 영화</div>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-6 text-center">
-                  <div
-                    className={`text-3xl font-bold mb-2 ${getLevelColor(
-                      userProfile.averageRating
-                    )}`}
-                  >
-                    {userProfile.averageRating.toFixed(1)}★
-                  </div>
-                  <div className="text-gray-400">평균 평점</div>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-6 text-center">
-                  <div className="text-3xl font-bold text-green-400 mb-2">
-                    {Math.floor(
-                      watchedMovies.reduce(
-                        (acc, movie) => acc + movie.runtime,
-                        0
-                      ) / 60
-                    )}
-                    h
-                  </div>
-                  <div className="text-gray-400">총 시청 시간</div>
-                </div>
-              </div>
-            </div>
-
             {/* 취향 분석 */}
+            <h3 className="text-xl font-bold mb-6">나의 영화 취향 분석</h3>
             <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-              <h3 className="text-xl font-bold mb-6">나의 영화 취향 분석</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <h4 className="font-semibold mb-4">선호 장르 순위</h4>
                   {/* Chart.js 세로 막대그래프 */}
-                  <div className="h-48 mb-4">
+                  <div className="h-64 mb-4">
                     <Bar
                       data={{
-                        labels: ['드라마', 'SF', '스릴러', '로맨스'],
+                        labels: [
+                          "액션",
+                          "드라마",
+                          "판타지",
+                          "스릴러",
+                          "SF",
+                          "애니",
+                          "호러",
+                          "추리",
+                        ],
                         datasets: [
                           {
-                            label: '시청 편수',
-                            data: [3, 2, 1, 1],
+                            label: "시청 편수",
+                            data: [5, 8, 3, 4, 6, 2, 1, 3],
                             backgroundColor: [
-                              'rgba(148, 163, 184, 0.8)', // slate-400
-                              'rgba(156, 163, 175, 0.8)', // gray-400
-                              'rgba(161, 161, 170, 0.8)', // zinc-400
-                              'rgba(163, 163, 163, 0.8)', // neutral-400
+                              "rgba(239, 68, 68, 0.8)", // red-500
+                              "rgba(99, 102, 241, 0.8)", // indigo-500
+                              "rgba(168, 85, 247, 0.8)", // purple-500
+                              "rgba(245, 101, 101, 0.8)", // red-400
+                              "rgba(59, 130, 246, 0.8)", // blue-500
+                              "rgba(236, 72, 153, 0.8)", // pink-500
+                              "rgba(75, 85, 99, 0.8)", // gray-600
+                              "rgba(16, 185, 129, 0.8)", // emerald-500
                             ],
                             borderColor: [
-                              'rgba(148, 163, 184, 1)',
-                              'rgba(156, 163, 175, 1)',
-                              'rgba(161, 161, 170, 1)',
-                              'rgba(163, 163, 163, 1)',
+                              "rgba(239, 68, 68, 1)",
+                              "rgba(99, 102, 241, 1)",
+                              "rgba(168, 85, 247, 1)",
+                              "rgba(245, 101, 101, 1)",
+                              "rgba(59, 130, 246, 1)",
+                              "rgba(236, 72, 153, 1)",
+                              "rgba(75, 85, 99, 1)",
+                              "rgba(16, 185, 129, 1)",
                             ],
-                            borderWidth: 1,
+                            borderWidth: 0.5,
                             borderRadius: 4,
                             borderSkipped: false,
+                            maxBarThickness: 30, // 막대 최대 굵기를 20px로 제한
                           },
                         ],
                       }}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                          legend: {
-                            display: false,
-                          },
-                          tooltip: {
-                            backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                            titleColor: '#ffffff',
-                            bodyColor: '#ffffff',
-                            borderColor: 'rgba(75, 85, 99, 0.5)',
-                            borderWidth: 1,
-                            callbacks: {
-                              label: function(context) {
-                                return `${context.parsed.y}편 시청`;
-                              }
-                            }
-                          }
-                        },
-                        scales: {
-                          x: {
-                            grid: {
+                      options={
+                        {
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
                               display: false,
                             },
-                            ticks: {
-                              color: '#9CA3AF',
-                              font: {
-                                size: 12,
+                            tooltip: {
+                              backgroundColor: "rgba(17, 24, 39, 0.9)",
+                              titleColor: "#ffffff",
+                              bodyColor: "#ffffff",
+                              borderColor: "rgba(75, 85, 99, 0.5)",
+                              borderWidth: 1,
+                              callbacks: {
+                                label: function (context: any) {
+                                  return `${context.parsed.y}편 시청`;
+                                },
                               },
                             },
-                            border: {
-                              display: false,
-                            },
                           },
-                          y: {
-                            beginAtZero: true,
-                            max: 4,
-                            grid: {
-                              color: 'rgba(75, 85, 99, 0.3)',
-                            },
-                            ticks: {
-                              color: '#9CA3AF',
-                              font: {
-                                size: 11,
+                          scales: {
+                            x: {
+                              grid: {
+                                display: false,
                               },
-                              stepSize: 1,
+                              ticks: {
+                                color: "#9CA3AF",
+                                font: {
+                                  size: 12,
+                                },
+                              },
+                              border: {
+                                display: false,
+                              },
                             },
-                            border: {
-                              display: false,
+                            y: {
+                              beginAtZero: true,
+                              max: 10,
+                              grid: {
+                                color: "rgba(75, 85, 99, 0.3)",
+                              },
+                              ticks: {
+                                color: "#9CA3AF",
+                                font: {
+                                  size: 11,
+                                },
+                                stepSize: 1,
+                              },
+                              border: {
+                                display: false,
+                              },
                             },
                           },
-                        },
-                        animation: {
-                          duration: 1000,
-                          easing: 'easeOutQuart',
-                        },
-                      }}
+                          animation: {
+                            duration: 1000,
+                            easing: "easeOutQuart",
+                          },
+                        } as any
+                      }
                     />
-                  </div>
-                  <div className="mt-4 p-3 bg-gray-800 rounded-lg">
-                    <p className="text-sm text-gray-300">
-                      <span className="font-medium text-gray-400">드라마</span>를 가장 선호하시네요! 
-                      감정적 몰입도가 높은 작품들을 좋아하는 경향이 있습니다.
-                    </p>
                   </div>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-4">평점 분포</h4>
-                  <div className="space-y-4">
-                    {[
-                      { rating: "5점 (최고)", count: 3, color: "bg-amber-600", percentage: 60 },
-                      { rating: "4점 (좋음)", count: 2, color: "bg-emerald-600", percentage: 40 },
-                      { rating: "3점 (보통)", count: 0, color: "bg-gray-600", percentage: 0 },
-                      { rating: "2점 이하", count: 0, color: "bg-gray-600", percentage: 0 },
-                    ].map((data) => (
-                      <div
-                        key={data.rating}
-                        className="relative"
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium">{data.rating}</span>
-                          <span className="text-sm text-gray-400">{data.count}편 ({data.percentage}%)</span>
-                        </div>
-                        <div className="relative bg-gray-800 rounded-lg h-6 overflow-hidden">
-                          <div
-                            className={`${data.color} h-full rounded-lg transition-all duration-1000 flex items-center justify-end pr-3`}
-                            style={{ width: `${data.percentage}%` }}
-                          >
-                            {data.count > 0 && (
-                              <span className="text-xs font-bold text-white">{data.count}</span>
-                            )}
+                  <div className="h-64 flex flex-col justify-center">
+                    <div className="space-y-4">
+                      {[
+                        {
+                          rating: "5점 (최고)",
+                          count: 3,
+                          color: "bg-slate-500",
+                          percentage: 60,
+                        },
+                        {
+                          rating: "4점 (좋음)",
+                          count: 2,
+                          color: "bg-slate-600",
+                          percentage: 40,
+                        },
+                        {
+                          rating: "3점 (보통)",
+                          count: 0,
+                          color: "bg-gray-700",
+                          percentage: 0,
+                        },
+                        {
+                          rating: "2점 이하",
+                          count: 0,
+                          color: "bg-gray-800",
+                          percentage: 0,
+                        },
+                      ].map((data) => (
+                        <div key={data.rating} className="relative">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm font-medium">
+                              {data.rating}
+                            </span>
+                            <span className="text-sm text-gray-400">
+                              {data.count}편 ({data.percentage}%)
+                            </span>
+                          </div>
+                          <div className="relative bg-gray-800 rounded-lg h-6 overflow-hidden">
+                            <div
+                              className={`${data.color} h-full rounded-lg transition-all duration-1000 flex items-center justify-end pr-3`}
+                              style={{ width: `${data.percentage}%` }}
+                            >
+                              {data.count > 0 && (
+                                <span className="text-xs font-bold text-white">
+                                  {data.count}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 p-3 bg-gray-800 rounded-lg">
-                    <p className="text-sm text-gray-300">
-                      평점 기준이 높으시네요! 대부분 4점 이상의 고품질 영화만 시청하는 신중한 관람객입니다.
-                    </p>
+                      ))}{" "}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* 맞춤 추천 */}
-            <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-              <h3 className="text-xl font-bold mb-6">취향 기반 추천</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gray-800 rounded-lg p-4">
-                  <h4 className="font-semibold mb-3 text-purple-400">추천 영화</h4>
-                  <div className="space-y-2 text-sm">
-                    <p>• <span className="font-medium">노매드랜드</span> - 감정적 드라마</p>
-                    <p>• <span className="font-medium">컨택트</span> - 철학적 SF</p>
-                    <p>• <span className="font-medium">나이브스 아웃</span> - 스타일리시 미스터리</p>
-                    <p>• <span className="font-medium">미나리</span> - 가족 드라마</p>
-                  </div>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-4">
-                  <h4 className="font-semibold mb-3 text-green-400">추천 감독</h4>
-                  <div className="space-y-2 text-sm">
-                    <p>• <span className="font-medium">크리스토퍼 놀란</span> - 복잡한 서사</p>
-                    <p>• <span className="font-medium">드니 빌뇌브</span> - 시각적 SF</p>
-                    <p>• <span className="font-medium">그레타 거윅</span> - 감성적 스토리</p>
-                    <p>• <span className="font-medium">조던 필</span> - 사회적 스릴러</p>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 p-3 bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-lg border border-purple-800/30">
-                <p className="text-sm text-gray-300">
-                  <span className="font-medium">취향 분석 결과:</span> 
-                  깊이 있는 스토리와 높은 완성도를 추구하는 관람객입니다. 
-                  감정적 몰입도가 높은 드라마와 상상력이 풍부한 SF 장르를 추천드립니다.
+              <div className="mt-4 p-3 bg-gradient-to-r from-purple-800/30 to-blue-800/30 rounded-lg border border-purple-800/30">
+                <p className="text-base text-gray-300 text-center">
+                  깊이 있는 스토리와 높은 완성도를 추구하는 관람객입니다. 감정적
+                  몰입도가 높은 드라마와 상상력이 풍부한 SF 장르를 추천드립니다.
                 </p>
               </div>
             </div>
