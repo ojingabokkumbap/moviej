@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -106,7 +106,7 @@ const sampleReviews: Review[] = [
   },
 ];
 
-export default function ReviewsPage() {
+function ReviewsPage() {
   const searchParams = useSearchParams();
   const movieId = searchParams.get("movieId");
   const movieTitle = searchParams.get("movieTitle");
@@ -300,5 +300,13 @@ export default function ReviewsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ReviewsPageWrapper() {
+  return (
+    <Suspense>
+      <ReviewsPage />
+    </Suspense>
   );
 }
