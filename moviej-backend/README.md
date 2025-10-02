@@ -1,6 +1,6 @@
-# MyHealth Backend - Spring Boot Application
+# Moviej Backend - Spring Boot Application
 
-MyHealth 프로젝트의 백엔드 API 서버입니다. Spring Boot + MySQL + Docker를 사용하여 구축되었습니다.
+Moviej 프로젝트의 백엔드 API 서버입니다. Spring Boot + MySQL + Docker를 사용하여 구축되었습니다.
 
 ## 🚀 빠른 시작
 
@@ -203,7 +203,7 @@ docker-compose up --build
 1. **저장소 클론**
    ```bash
    git clone [repository-url]
-   cd myHealth-backend
+   cd moviej-backend
    ```
 
 2. **Docker 설치 확인**

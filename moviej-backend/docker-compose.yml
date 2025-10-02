@@ -1,7 +1,7 @@
 services:
   db:
     image: mysql:8
-    container_name: myhealth-db
+    container_name: moviej-db
     restart: always
     ports:
       - "3307:3306"
@@ -27,7 +27,7 @@ services:
 
   app:
     build: .
-    container_name: myhealth-app
+    container_name: moviej-app
     ports:
       - "8080:8080"
     depends_on:
@@ -41,9 +41,9 @@ services:
 
   frontend:
     build:
-      context: ../myHealth-frontend
+      context: ../moviej-frontend
       dockerfile: Dockerfile
-    container_name: myhealth-frontend
+    container_name: moviej-frontend
     ports:
       - "3000:80"
     depends_on:
