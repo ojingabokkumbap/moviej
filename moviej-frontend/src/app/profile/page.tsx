@@ -413,8 +413,8 @@ export default function MovieNotePage() {
             </div>
 
             {/* 최근 활동 */}
+            <h3 className="text-xl font-bold mb-2">최근 시청한 영화</h3>
             <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-              <h3 className="text-xl font-bold mb-4">최근 시청한 영화</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {watchedMovies.slice(0, 5).map((movie) => (
                   <div key={movie.id} className="group cursor-pointer">
@@ -526,15 +526,16 @@ export default function MovieNotePage() {
         {/* 내 리뷰 */}
         {activeTab === "reviews" && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="bg-gray-900 rounded-lg p-6 text-center border border-gray-700">
-                <div className="text-3xl font-bold text-violet-400 mb-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-6 text-center relative">
+                <div className="absolute top-1/2 right-0 -translate-y-1/2 h-8 border-r border-gray-500"></div>
+                <div className="text-3xl font-bold text-gray-300 mb-2">
                   {watchedMovies.filter((m) => m.review).length}
                 </div>
                 <div className="text-gray-400">작성한 리뷰</div>
               </div>
-              <div className="bg-gray-900 rounded-lg p-6 text-center border border-gray-700">
-                <div className="text-3xl font-bold text-red-400 mb-2">342</div>
+              <div className="p-6 text-center relative">
+                <div className="text-3xl font-bold text-gray-300 mb-2">10</div>
                 <div className="text-gray-400">받은 좋아요</div>
               </div>
             </div>
