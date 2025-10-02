@@ -110,21 +110,21 @@ curl -u postman:password -X POST \
 ### Docker MySQL 컨테이너 직접 접속
 ```bash
 # MySQL 컨테이너 접속
-docker exec -it myhealth-backend-db-1 mysql -u user -puserpw mydb
+docker exec -it moviej-db mysql -u yooheez -pY5NZ2bozuoOj63yxIbeV mydb
 
 # 테이블 확인
-docker exec -it myhealth-backend-db-1 mysql -u user -puserpw mydb -e "SHOW TABLES;"
+docker exec -it moviej-db mysql -u yooheez -pY5NZ2bozuoOj63yxIbeV mydb -e "SHOW TABLES;"
 
 # 데이터 확인
-docker exec -it myhealth-backend-db-1 mysql -u user -puserpw mydb -e "SELECT * FROM posts;"
+docker exec -it moviej-db mysql -u yooheez -pY5NZ2bozuoOj63yxIbeV mydb -e "SELECT * FROM posts;"
 ```
 
 ### 외부 도구로 접속
 - **호스트**: `localhost`
 - **포트**: `3307`
 - **데이터베이스**: `mydb`
-- **사용자명**: `user`
-- **비밀번호**: `userpw`
+- **사용자명**: `yooheez`
+- **비밀번호**: `Y5NZ2bozuoOj63yxIbeV`
 
 ## 🔧 개발 환경 설정
 
@@ -133,8 +133,8 @@ Docker Compose를 통해 다음 환경변수들이 자동으로 설정됩니다:
 
 ```env
 SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/mydb?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8
-SPRING_DATASOURCE_USERNAME=user
-SPRING_DATASOURCE_PASSWORD=userpw
+SPRING_DATASOURCE_USERNAME=yooheez
+SPRING_DATASOURCE_PASSWORD=Y5NZ2bozuoOj63yxIbeV
 SPRING_JPA_HIBERNATE_DDL_AUTO=update
 SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
 ```
@@ -145,8 +145,8 @@ SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
 ```properties
 # application-local.properties
 spring.datasource.url=jdbc:mysql://localhost:3307/mydb?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
-spring.datasource.username=user
-spring.datasource.password=userpw
+spring.datasource.username=yooheez
+spring.datasource.password=Y5NZ2bozuoOj63yxIbeV
 ```
 
 실행 시:
@@ -169,7 +169,7 @@ spring.datasource.password=userpw
    docker-compose logs db
    
    # MySQL 헬스체크 확인
-   docker exec myhealth-backend-db-1 mysqladmin ping -h localhost -u user -puserpw
+   docker exec moviej-db mysqladmin ping -h localhost -u yooheez -pY5NZ2bozuoOj63yxIbeV
    ```
 
 3. **Spring Boot 시작 실패**
