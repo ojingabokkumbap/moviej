@@ -26,7 +26,9 @@ services:
       - backend
 
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: dockerfile
     container_name: moviej-app
     ports:
       - "8080:8080"
@@ -42,7 +44,7 @@ services:
   frontend:
     build:
       context: ../moviej-frontend
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     container_name: moviej-frontend
     ports:
       - "3000:80"
