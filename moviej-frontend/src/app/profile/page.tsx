@@ -413,7 +413,7 @@ export default function MovieNotePage() {
             </div>
 
             {/* 최근 활동 */}
-            <h3 className="text-xl font-bold mb-2">최근 시청한 영화</h3>
+            <h3 className="text-xl font-bold mb-2 ">최근 시청한 영화</h3>
             <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {watchedMovies.slice(0, 5).map((movie) => (
