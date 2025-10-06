@@ -28,10 +28,12 @@ public class UserService {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
         }
-        if (userRepository.findByUserId(user.getUserId()) != null) {
-            throw new IllegalArgumentException("이미 존재하는 사용자 ID입니다.");
+
+        // 닉네임 중복 체크
+        if (userRepository.findByNickname(user.getNickname()).isPresent()) {
+            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
         }
-        
+
         String encodedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
 
@@ -42,9 +44,11 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public User findByUserId(String email) {
-        return userRepository.findByUserId(email);
+    public Optional<User> findByNickname(String nickname) {
+        return userRepository.findByNickname(nickname);
     }
+
+
 
     public Optional<User> login(String email, String password) {
         Optional<User> userOpt = userRepository.findByEmail(email);
