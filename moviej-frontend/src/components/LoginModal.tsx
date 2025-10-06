@@ -1,5 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { api } from "@/lib/api";
+import { c } from "framer-motion/dist/types.d-Cjd591yU";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -8,33 +10,87 @@ interface LoginModalProps {
   onOpenSignUp?: () => void;
 }
 
-export default function LoginModal({ isOpen, onClose, onLogin, onOpenSignUp }: LoginModalProps) {
+export default function LoginModal({
+  isOpen,
+  onClose,
+  onOpenSignUp,
+}: LoginModalProps) {
   const [email, setEmail] = useState("");
+  const [rememberEmail, setRememberEmail] = useState(false);
   const [password, setPassword] = useState("");
+  const [mode, setMode] = useState<"login" | "findId" | "findPassword">(
+    "login"
+  );
+  const [nickname, setNickname] = useState("");
+  const [findEmail, setFindEmail] = useState("");
+  const [findIdResult, setFindIdResult] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) {
+      setEmail(localStorage.getItem("rememberEmail") || "");
+      setRememberEmail(!!localStorage.getItem("rememberEmail"));
+      setPassword("");
+      setMode("login");
+      setNickname("");
+      setFindEmail("");
+      setFindIdResult("");
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (onLogin) {
-      onLogin(email, password);
-    }
-    // 로그인 성공 후 모달 닫기
-    onClose();
-  };
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
+    if (mode === "login") {
+      try {
+        // 아이디 기억하기
+        if (rememberEmail) {
+          localStorage.setItem("rememberEmail", email);
+        } else {
+          localStorage.removeItem("rememberEmail");
+        }
+
+        const response = await api.post("/users/login", { email, password });
+
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("userEmail", response.data.email || email);
+        localStorage.setItem("userNickname", response.data.nickname);
+
+        window.dispatchEvent(new Event("storage"));
+        onClose();
+      } catch (error) {
+        console.error("로그인 실패:", error);
+        alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
+      }
+    } else if (mode === "findId") {
+      try {
+        const response = await api.get(
+          `/users/find-email?nickname=${nickname}`
+        );
+        setFindIdResult(response.data.email);
+      } catch (error) {
+        setFindIdResult("");
+        console.error("아이디 찾기 실패:", error);
+        alert("해당 닉네임을 찾을 수 없습니다.");
+      }
+    } else if (mode === "findPassword") {
+      try {
+        const response = await api.post("/users/find-password", {
+          email: findEmail,
+        });
+        alert("이메일로 임시 비밀번호가 발송되었습니다.");
+        setMode("login");
+      } catch (error) {
+        console.error("비밀번호 찾기 실패:", error);
+        alert("해당 이메일을 찾을 수 없습니다.");
+      }
     }
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      onClick={handleBackdropClick}
-    >
-      <div className="bg-white rounded-xl px-14 py-10 w-full max-w-md mx-4 relative">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl px-14 py-14 w-full max-w-md mx-4 relative ">
         {/* 닫기 버튼 */}
         <button
           onClick={onClose}
@@ -51,73 +107,184 @@ export default function LoginModal({ isOpen, onClose, onLogin, onOpenSignUp }: L
           </svg>
         </button>
         {/* 헤더 */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-4">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            로그인
+            {mode === "login" && "로그인"}
+            {mode === "findId" && "아이디 찾기"}
+            {mode === "findPassword" && "비밀번호 찾기"}
           </h2>
           <p className="text-gray-600">
-            영화 취향을 알아보세요
+            {mode === "login" && "로그인 하고 영화 취향을 알아보세요"}
+            {mode === "findId" && "등록한 닉네임으로 이메일을 찾아드립니다"}
+            {mode === "findPassword" && "등록한 이메일로 임시 비밀번호를 발송합니다"}
           </p>
         </div>
 
         {/* 폼 */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-3 border bg-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="아이디"
-              required
-            />
-          </div>
-          <div>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-3 border bg-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="비밀번호"
-              required
-            />
-          </div>
+          {mode === "login" && (
+            <>
+              <div className="relative">
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 pt-6 pb-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+                  placeholder="이메일"
+                  required
+                />
+                <span className="absolute left-3 top-4 text-xs transform -translate-y-1/2 text-gray-500 pointer-events-none">
+                  이메일
+                </span>
+              </div>
+              <div className="relative">
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 pt-6 pb-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+                  required
+                />
+                <span className="absolute left-3 top-4 text-xs transform -translate-y-1/2 text-gray-500 pointer-events-none">
+                  비밀번호
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="rememberEmail"
+                  checked={rememberEmail}
+                  onChange={(e) => setRememberEmail(e.target.checked)}
+                />
+                <label
+                  htmlFor="rememberEmail"
+                  className="text-sm text-gray-600"
+                >
+                  아이디 기억하기
+                </label>
+              </div>
+            </>
+          )}
+
+          {mode === "findId" && (
+            <>
+              <div className="relative">
+                <input
+                  type="text"
+                  id="nickname"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  className="w-full px-3 pt-6 pb-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+                  required
+                />
+                <span className="absolute left-3 top-4 text-xs transform -translate-y-1/2 text-gray-500 pointer-events-none">
+                  닉네임
+                </span>
+              </div>
+              {findIdResult && (
+                <>
+                  <div className="mt-4 text-center ">
+                    <p className="text-gray-600 text-sm">
+                      검색결과 해당하는 이메일은
+                    </p>
+                    <span className="text-purple-500 text-lg font-semibold">
+                      {findIdResult}
+                    </span>
+                    <span className="text-gray-600 text-sm">입니다.</span>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
+          {mode === "findPassword" && (
+            <div className="relative">
+              <input
+                type="email"
+                id="findEmail"
+                value={findEmail}
+                onChange={(e) => setFindEmail(e.target.value)}
+                className="w-full px-3 pt-6 pb-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+                required
+              />
+              <span className="absolute left-3 top-4 text-xs transform -translate-y-1/2 text-gray-500 pointer-events-none">
+                이메일
+              </span>
+            </div>
+          )}
 
           <button
             type="submit"
             className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all"
           >
-            로그인
+            {mode === "login" && "로그인"}
+            {mode === "findId" && "아이디 찾기"}
+            {mode === "findPassword" && "비밀번호 찾기"}
           </button>
         </form>
 
-        {/* 소셜 로그인 */}
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+        {/* 아이디/비밀번호 찾기 및 회원가입 버튼 */}
+        {mode === "login" && (
+          <>
+            {/* 아이디/비밀번호 찾기 */}
+            <div className="mt-6 mb-4 flex justify-center gap-4">
+              <button
+                type="button"
+                onClick={() => setMode("findId")}
+                className=" text-gray-600 hover:text-purple-600"
+              >
+                아이디 찾기
+              </button>
+              <span className="text-gray-200">|</span>
+              <button
+                type="button"
+                onClick={() => setMode("findPassword")}
+                className=" text-gray-600 hover:text-purple-600"
+              >
+                비밀번호 찾기
+              </button>
+              <span className="text-gray-200">|</span>
+              <button
+                type="button"
+                onClick={onOpenSignUp}
+                className="ml-1 text-purple-600  hover:text-purple-700  font-medium"
+              >
+                회원가입
+              </button>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">또는</span>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
 
-        {/* 회원가입 페이지로 이동 */}
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            계정이 없으신가요?
-            <button
-              type="button"
-              onClick={onOpenSignUp}
-              className="ml-1 text-purple-600 hover:text-purple-700 font-medium"
-            >
-              회원가입
-            </button>
-          </p>
-        </div>
+        {/* 뒤로가기 (아이디/비밀번호 찾기 모드일 때) */}
+        {(mode === "findId" || mode === "findPassword") && (
+          <>
+            {" "}
+            <div className="mt-8">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">또는</span>
+                </div>
+              </div>
+            </div>
+            <div className="mt-2 text-center">
+              <p className="text-gray-600">
+                이미 계정이 있으신가요?
+                <button
+                  type="button"
+                  onClick={() => setMode("login")}
+                  className="ml-1 text-purple-600 hover:text-purple-700 font-medium"
+                >
+                  로그인
+                </button>
+              </p>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
