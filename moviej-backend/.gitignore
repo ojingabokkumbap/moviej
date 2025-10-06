@@ -39,3 +39,7 @@ out/
 *.env
 db_config.py
 aws_credentials.json
+
+# curl 테스트 관련 파일이나 디렉토리 제외
+projectName/curl
+projectName/-d
