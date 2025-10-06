@@ -9,13 +9,13 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/s3")
 public class S3TestController {
-    private final S3Service s3Service;
-    public S3TestController(S3Service s3Service) {
-        this.s3Service = s3Service;
-    }
+    // private final S3Service s3Service;
+    // public S3TestController(S3Service s3Service) {
+    //     this.s3Service = s3Service;
+    // }
 
-    @GetMapping("/test-upload")
-    public String testUpload() throws IOException {
-        return s3Service.testUpload();
-    }
+    // @GetMapping("/test-upload")
+    // public String testUpload() throws IOException {
+    //     return s3Service.testUpload();
+    // }
 }
