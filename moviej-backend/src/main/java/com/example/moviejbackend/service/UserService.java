@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.moviejbackend.domain.Post;
@@ -18,30 +19,43 @@ import com.example.moviejbackend.repository.UserRepository;
 public class UserService {
 
     @Autowired
-    private UserRepository UserRepository;
+    private UserRepository userRepository;
+
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
 
     public User registerUser(User user) {
-        return UserRepository.save(user);
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+        }
+        if (userRepository.findByUserId(user.getUserId()) != null) {
+            throw new IllegalArgumentException("이미 존재하는 사용자 ID입니다.");
+        }
+        
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
+
+        return userRepository.save(user);
     }    
 
     public List<User> getAllUsers() {
-        return UserRepository.findAll();
+        return userRepository.findAll();
     }
 
     public User findByUserId(String email) {
-        return UserRepository.findByUserId(email);
+        return userRepository.findByUserId(email);
     }
 
-    public Optional<User> login(String email, String password, String userId) {
-        Optional<User> userOpt = UserRepository.findByEmail(email);
-        if (userOpt.isPresent() && userOpt.get().getPassword().equals(password)) {
+    public Optional<User> login(String email, String password) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isPresent() && passwordEncoder.matches(password, userOpt.get().getPassword())) {
             return userOpt;
         }
         return Optional.empty();
     }
 
     public Optional<User> findByEmail(String email) {
-        return UserRepository.findByEmail(email);
+        return userRepository.findByEmail(email);
     }
 
 }
