@@ -21,8 +21,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // 자동 증가 설정
     private Long id; // 회원 고유 ID
     
-    @Column(nullable = false, unique = true)
-    private String userId; // 사용자 ID (로그인용)
+    @Column(nullable = false, unique = true, length = 50)
+    private String nickname; // 유저 별명
 
     @Column(nullable = false)
     private String password; // 비밀번호 (암호화 필요)
@@ -43,11 +43,5 @@ public class User {
 
     @Column
     private Integer age; // 나이
-
-    @Column
-    private Integer height; // 키
-
-    @Column
-    private Integer weight; // 몸무게
 
 }

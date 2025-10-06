@@ -10,10 +10,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    User findByUserId(String userId);
-
     Optional<User> findByEmail(String email);
-
+    Optional<User> findByNickname(String nickname); // 추가
     // 사용자 관련 추가 메서드 정의 가능
     // 예: 사용자 이름으로 찾기, 이메일로 찾기 등
     /*     Optional<User> findByUsername(String username);
