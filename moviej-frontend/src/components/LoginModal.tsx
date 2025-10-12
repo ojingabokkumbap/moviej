@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { c } from "framer-motion/dist/types.d-Cjd591yU";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -77,7 +76,7 @@ export default function LoginModal({
       }
     } else if (mode === "findPassword") {
       try {
-        const response = await api.post("/users/find-password", {
+        const response = await api.post("/users/password-reset-request", {
           email: findEmail,
         });
         alert("임시 비밀번호가 이메일로 발송되었습니다.");
@@ -131,7 +130,7 @@ export default function LoginModal({
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 pt-6 pb-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+                  className="w-full px-3 pt-6 pb-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800 bg-white"
                   placeholder="이메일"
                   required
                 />
@@ -145,7 +144,7 @@ export default function LoginModal({
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 pt-6 pb-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+                  className="w-full px-3 pt-6 pb-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800 bg-white"
                   required
                 />
                 <span className="absolute left-3 top-4 text-xs transform -translate-y-1/2 text-gray-500 pointer-events-none">
@@ -177,7 +176,7 @@ export default function LoginModal({
                   id="nickname"
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
-                  className="w-full px-3 pt-6 pb-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+                  className="w-full px-3 pt-6 pb-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800 bg-white"
                   required
                 />
                 <span className="absolute left-3 top-4 text-xs transform -translate-y-1/2 text-gray-500 pointer-events-none">
@@ -207,7 +206,7 @@ export default function LoginModal({
                 id="findEmail"
                 value={findEmail}
                 onChange={(e) => setFindEmail(e.target.value)}
-                className="w-full px-3 pt-6 pb-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+                className="w-full px-3 pt-6 pb-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800 bg-white"
                 required
               />
               <span className="absolute left-3 top-4 text-xs transform -translate-y-1/2 text-gray-500 pointer-events-none">
@@ -234,7 +233,7 @@ export default function LoginModal({
               <button
                 type="button"
                 onClick={() => setMode("findId")}
-                className=" text-gray-600 hover:text-purple-600"
+                className=" text-gray-600 hover:text-purple-600 "
               >
                 아이디 찾기
               </button>
