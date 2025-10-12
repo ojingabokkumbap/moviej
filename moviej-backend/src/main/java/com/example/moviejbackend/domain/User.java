@@ -44,4 +44,7 @@ public class User {
     @Column
     private Integer age; // 나이
 
+    @Column
+    private String profileImage; // 프로필 이미지 URL
+
 }

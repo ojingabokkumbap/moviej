@@ -56,6 +56,7 @@ export default function LoginModal({
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("userEmail", response.data.email || email);
         localStorage.setItem("userNickname", response.data.nickname);
+        localStorage.setItem("userProfileImage", response.data.profileImage || "");
 
         window.dispatchEvent(new Event("storage"));
         onClose();
@@ -79,7 +80,7 @@ export default function LoginModal({
         const response = await api.post("/users/find-password", {
           email: findEmail,
         });
-        alert("이메일로 임시 비밀번호가 발송되었습니다.");
+        alert("임시 비밀번호가 이메일로 발송되었습니다.");
         setMode("login");
       } catch (error) {
         console.error("비밀번호 찾기 실패:", error);
@@ -116,7 +117,7 @@ export default function LoginModal({
           <p className="text-gray-600">
             {mode === "login" && "로그인 하고 영화 취향을 알아보세요"}
             {mode === "findId" && "등록한 닉네임으로 이메일을 찾아드립니다"}
-            {mode === "findPassword" && "등록한 이메일로 임시 비밀번호를 발송합니다"}
+            {mode === "findPassword" && "등록한 이메일로 비밀번호를 발송합니다"}
           </p>
         </div>
 

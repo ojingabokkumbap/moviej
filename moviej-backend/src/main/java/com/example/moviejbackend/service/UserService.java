@@ -7,6 +7,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -26,6 +32,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
     @Value("${app.frontend.url}") 
     private String frontendBaseUrl;
@@ -221,18 +230,28 @@ public class UserService {
         
         // 1. 현재 비밀번호가 일치하는지 확인
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new IllegalArgumentException("Current password does not match.");
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
         }
         
-        // 2. 새 비밀번호 유효성 검사 (예: 길이, 복잡성. 여기서는 간단히 구현)
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new IllegalArgumentException("New password must be at least 6 characters long.");
-        }
 
         // 3. 새 비밀번호 암호화 및 DB 업데이트
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
 
+    public String updateProfileImage(String email, MultipartFile file) throws IOException {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
 
+        // Cloudinary에 이미지 업로드
+        Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+        String imageUrl = uploadResult.get("secure_url").toString();
+
+        // 유저 프로필 이미지 업데이트
+        User user = userOpt.get();
+        user.setProfileImage(imageUrl);
+        userRepository.save(user);
+
+        return imageUrl;
+    }   
 }

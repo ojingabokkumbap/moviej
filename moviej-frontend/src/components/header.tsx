@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import LoginModal from "@/components/LoginModal";
 import SignUpModal from "@/components/SignUpModal";
+import AccountSettingsModal from "@/components/AccountSettingsModal";
 
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -20,9 +21,14 @@ export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userNickname, setUserNickname] = useState<string | null>(null);
+  const [userProfileImage, setUserProfileImage] = useState<string | null>(
+    typeof window !== "undefined" ? localStorage.getItem("userProfileImage") : null
+  );
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+  const [isAccountSettingsModalOpen, setIsAccountSettingsModalOpen] =
+    useState(false);
 
   // 로그인 상태 초기화
   useEffect(() => {
@@ -30,6 +36,7 @@ export default function Header() {
       setIsLoggedIn(!!localStorage.getItem("token"));
       setUserEmail(localStorage.getItem("userEmail"));
       setUserNickname(localStorage.getItem("userNickname"));
+      setUserProfileImage(localStorage.getItem("userProfileImage"));
     };
     checkLogin();
     window.addEventListener("storage", checkLogin);
@@ -156,6 +163,10 @@ export default function Header() {
           setIsLoginModalOpen(true);
         }}
       />
+      <AccountSettingsModal
+        isOpen={isAccountSettingsModalOpen}
+        onClose={() => setIsAccountSettingsModalOpen(false)}
+      />
       <header
         className="fixed top-0 left-0 w-full z-50"
         style={{
@@ -236,18 +247,21 @@ export default function Header() {
               {isLoggedIn && (
                 <button
                   onClick={toggleProfile}
-                  className="rounded-full bg-gray-400 p-1 flex items-center justify-center hover:bg-gray-300 transition-colors"
+                  className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center overflow-hidden border border-gray-400"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M4 20c0-3.313 3.134-6 8-6s8 2.687 8 6" />
-                  </svg>
+                  {userProfileImage ? (
+                    <Image
+                      src={userProfileImage}
+                      alt="프로필 이미지"
+                      width={40}
+                      height={40}
+                      className="w-full h-full object-cover "
+                    />
+                  ) : (
+                    <span className="text-white font-medium">
+                      {userNickname?.charAt(0).toUpperCase() || "U"}
+                    </span>
+                  )}
                 </button>
               )}
               {/* 프로필 드롭다운 메뉴 */}
@@ -256,8 +270,20 @@ export default function Header() {
                   {/* 사용자 정보 섹션 */}
                   <div className="px-4 py-3 border-b border-gray-700">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-violet-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-medium">U</span>
+                      <div className="w-10 h-10 bg-violet-600 rounded-full flex items-center justify-center overflow-hidden border border-gray-400">
+                        {userProfileImage ? (
+                          <Image
+                            src={userProfileImage}
+                            alt="프로필 이미지"
+                            width={45}
+                            height={45}
+                            className="w-full h-full object-cover "
+                          />
+                        ) : (
+                          <span className="text-white font-medium">
+                            {userNickname?.charAt(0).toUpperCase() || "U"}
+                          </span>
+                        )}
                       </div>
                       <div>
                         <p className="text-white font-medium">{userNickname}</p>
@@ -289,9 +315,10 @@ export default function Header() {
                     </button>
 
                     <button
-                      onClick={() =>
-                        handleProfileMenuClick("/profile/settings")
-                      }
+                      onClick={() => {
+                        setIsAccountSettingsModalOpen(true);
+                        setIsProfileOpen(false);
+                      }}
                       className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                     >
                       <svg
@@ -362,9 +389,11 @@ export default function Header() {
                           localStorage.removeItem("token"); // 토큰 삭제
                           localStorage.removeItem("userEmail"); // 사용자 이메일 삭제
                           localStorage.removeItem("userNickname"); // 사용자 닉네임 삭제
+                          localStorage.removeItem("userProfileImage"); // 프로필 이미지 삭제
                           setIsLoggedIn(false); // 상태 갱신
                           setUserEmail(null); // 이메일 상태 초기화
                           setUserNickname(null); // 닉네임 상태 초기화
+                          setUserProfileImage(null); // 프로필 이미지 상태 초기화
                           setIsProfileOpen(false); // 드롭다운 닫기
                           window.dispatchEvent(new Event("storage")); // 상태 동기화
                           router.push("/"); // 홈으로 이동

@@ -6,6 +6,7 @@ import com.example.moviejbackend.util.JwtUtil;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -31,12 +32,14 @@ public class UserController {
         public String email;
         public String token;
         public String nickname;
+        public String profileImage;
 
-        public LoginResponse(String userId, String email, String token, String nickname) {
+        public LoginResponse(String userId, String email, String token, String nickname, String profileImage) {
             this.userId = userId;
             this.email = email;
             this.token = token;
             this.nickname = nickname;
+            this.profileImage = profileImage;
         }
     }
 
@@ -75,13 +78,13 @@ public class UserController {
                     String.valueOf(user.get().getId()),
                     user.get().getEmail(),
                     token,
-                    user.get().getNickname()
+                    user.get().getNickname(),
+                    user.get().getProfileImage()
                 )
             ); 
         } else {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid email or password"));
         }
-       
     }
 
     @GetMapping("/find-email")
@@ -107,26 +110,11 @@ public class UserController {
             return ResponseEntity.status(404).body(Map.of("error", "User not found"));
         }
 
-        //String token = userService.createPasswordResetToken(userOpt.get());
-
         // 🚨 임시 비밀번호 생성 및 발송 로직 호출
         String tempPassword = userService.generateTemporaryPassword(userOpt.get());
 
         return ResponseEntity.ok(Map.of("message", "Temporary password sent to email."));
     }
-
-    // @PostMapping("/password-reset")
-    // public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
-    //     String token = body.get("token");
-    //     String newPassword = body.get("newPassword");
-
-    //     boolean success = userService.resetPassword(token, newPassword);
-    //     if (success) {
-    //         return ResponseEntity.ok(Map.of("message", "Password has been reset successfully"));
-    //     } else {
-    //         return ResponseEntity.status(400).body(Map.of("error", "Invalid or expired token"));
-    //     }
-    // }
 
     public static class UpdatePasswordRequest {
         public String email;          // 현재 로그인된 사용자의 이메일 (또는 토큰에서 추출)
@@ -151,6 +139,20 @@ public class UserController {
             return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "An unexpected error occurred"));
+        }
+    }
+
+    // 프로필이미지 변경
+    @PostMapping(value = "/profile-image", consumes = "multipart/form-data")
+    public ResponseEntity<?> updateProfileImage(
+        @RequestParam("file") MultipartFile file,
+        @RequestParam("email") String email // 실제 운영에서는 JWT에서 추출
+    ) {
+        try {
+            String imageUrl = userService.updateProfileImage(email, file);
+            return ResponseEntity.ok(Map.of("profileImage", imageUrl));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
         }
     }
 }
