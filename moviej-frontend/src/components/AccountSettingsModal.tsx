@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { api } from "@/lib/api";
+import { useNotification } from "@/contexts/NotificationContext";
 
 interface AccountSettingsModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ export default function AccountSettingsModal({
   isOpen,
   onClose,
 }: AccountSettingsModalProps) {
+  const { showNotification } = useNotification();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -57,10 +59,10 @@ export default function AccountSettingsModal({
   };
 
   // 프로필 이미지 제거
-  const removeProfileImage = () => {
+  /* const removeProfileImage = () => {
     setProfileImage(null);
     setSelectedFile(null);
-  };
+  }; */
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,18 +70,18 @@ export default function AccountSettingsModal({
     // 비밀번호 변경 시에만 검증
     if (currentPassword || newPassword || confirmPassword) {
       if (!currentPassword || !newPassword || !confirmPassword) {
-        alert("비밀번호를 변경하려면 모든 비밀번호 필드를 입력하세요.");
+        showNotification("비밀번호를 변경하려면 모든 비밀번호 필드를 입력하세요.", "warning");
         return;
       }
       if (newPassword !== confirmPassword) {
-        alert("새 비밀번호가 일치하지 않습니다.");
+        showNotification("새 비밀번호가 일치하지 않습니다.", "error");
         return;
       }
     }
 
     // 변경할 것이 없으면 알림
     if (!selectedFile && !newPassword) {
-      alert("변경할 정보를 입력하세요.");
+      showNotification("변경할 정보를 입력하세요.", "info");
       return;
     }
 
@@ -91,7 +93,7 @@ export default function AccountSettingsModal({
       // 프로필 이미지 업로드 (선택사항)
       if (selectedFile) {
         if (selectedFile.size > 2 * 1024 * 1024) {
-          alert("이미지 파일은 2MB 이하만 업로드 가능합니다.");
+          showNotification("이미지 파일은 2MB 이하만 업로드 가능합니다.", "error");
           setIsLoading(false);
           return;
         }
@@ -137,7 +139,7 @@ export default function AccountSettingsModal({
         message = "비밀번호가 변경되었습니다.";
       }
 
-      alert(message);
+      showNotification(message, "success");
       onClose();
       window.location.reload();
 
@@ -147,7 +149,7 @@ export default function AccountSettingsModal({
         error?.response?.data?.error ||
         error?.message ||
         "계정 정보 변경에 실패했습니다.";
-      alert(errorMsg);
+      showNotification(errorMsg, "error");
     } finally {
       setIsLoading(false);
     }

@@ -7,8 +7,10 @@ import { useRouter } from "next/navigation";
 import LoginModal from "@/components/LoginModal";
 import SignUpModal from "@/components/SignUpModal";
 import AccountSettingsModal from "@/components/AccountSettingsModal";
+import { useNotification } from "@/contexts/NotificationContext";
 
 export default function Header() {
+  const { showNotification } = useNotification();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -247,7 +249,7 @@ export default function Header() {
               {isLoggedIn && (
                 <button
                   onClick={toggleProfile}
-                  className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center overflow-hidden border border-gray-400"
+                  className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center overflow-hidden border border-gray-400"
                 >
                   {userProfileImage ? (
                     <Image
@@ -270,7 +272,7 @@ export default function Header() {
                   {/* 사용자 정보 섹션 */}
                   <div className="px-4 py-3 border-b border-gray-700">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-violet-600 rounded-full flex items-center justify-center overflow-hidden border border-gray-400">
+                      <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center overflow-hidden border border-gray-400">
                         {userProfileImage ? (
                           <Image
                             src={userProfileImage}
@@ -342,27 +344,6 @@ export default function Header() {
                       </svg>
                       계정 설정
                     </button>
-
-                    <button
-                      onClick={() => handleProfileMenuClick("/reviews")}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                    >
-                      <svg
-                        className="w-4 h-4 mr-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                        />
-                      </svg>
-                      내 리뷰
-                    </button>
-
                     <button
                       onClick={() => handleProfileMenuClick("/watchlist")}
                       className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
@@ -397,7 +378,7 @@ export default function Header() {
                           setIsProfileOpen(false); // 드롭다운 닫기
                           window.dispatchEvent(new Event("storage")); // 상태 동기화
                           router.push("/"); // 홈으로 이동
-                          alert("로그아웃 되었습니다.");
+                          showNotification("로그아웃 되었습니다.", "info");
                         }}
                         className="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors"
                       >
