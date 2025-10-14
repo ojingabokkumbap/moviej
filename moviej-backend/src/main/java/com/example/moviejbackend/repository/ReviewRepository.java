@@ -12,4 +12,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
      List<Review> findByTmdbMovieIdOrderByCreatedAtDesc(String tmdbMovieId);  // 최신순
 
     boolean existsByTmdbMovieIdAndUser(String tmdbMovieId, User user);
+
+    List<Review> findAllByOrderByCreatedAtDesc();
 }

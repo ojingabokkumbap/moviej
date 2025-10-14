@@ -26,6 +26,23 @@ public class ReviewService {
     @Autowired
     private ReviewLikeRepository reviewLikeRepository;
 
+    // 전체 리뷰 조회
+    public List<ReviewResponseDto> getAllReviews() {
+        List<Review> reviews = reviewRepository.findAllByOrderByCreatedAtDesc();  // 최신순 전체 리뷰
+        return reviews.stream().map(review -> new ReviewResponseDto(
+            review.getId(),
+            review.getTmdbMovieId(),
+            review.getMovieTitle(),
+            review.getTitle(),
+            review.getNickname(),
+            review.getProfileImage(),
+            review.getRating(),
+            review.getContent(),
+            review.getLikes(),
+            review.getCreatedAt()
+        )).collect(Collectors.toList());
+    }
+
     // 리뷰작성
     public Review createReview(String email, String tmdbMovieId, String movieTitle, String title, Integer rating, String content) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));

@@ -17,6 +17,14 @@ public class ReviewController {
     @Autowired
     private ReviewService reviewService;
 
+    // 전체 리뷰 조회
+    @GetMapping
+    public ResponseEntity<List<ReviewResponseDto>> getAllReviews() {
+        List<ReviewResponseDto> reviews = reviewService.getAllReviews(); 
+        return ResponseEntity.ok(reviews);
+    }
+
+    // 리뷰 작성
     @PostMapping
     public ResponseEntity<Review> createReview(@RequestBody ReviewRequestDto request) {
         Review review = reviewService.createReview(request.getEmail(), request.getTmdbMovieId(), request.getMovieTitle(),
@@ -24,7 +32,7 @@ public class ReviewController {
         return ResponseEntity.ok(review);
     }
 
-      // 영화 리뷰 조회
+    // 영화 리뷰 조회
     @GetMapping("/movie/{tmdbMovieId}")
     public ResponseEntity<List<ReviewResponseDto>> getMovieReviews(@PathVariable String tmdbMovieId) {
         List<ReviewResponseDto> reviews = reviewService.getMovieReviews(tmdbMovieId);

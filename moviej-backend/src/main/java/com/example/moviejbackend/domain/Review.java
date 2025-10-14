@@ -50,6 +50,9 @@ public class Review {
     @Column
     private LocalDateTime updatedAt; // 수정일
 
+    @Column(nullable = true)
+    private String posterPath; // TMDB 포스터 경로
+
     public String getNickname() {
         return user != null ? user.getNickname() : null;
     }
