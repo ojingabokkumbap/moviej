@@ -1,6 +1,6 @@
-# myHealth-frontend
+# moviej-frontend
 
-이 프로젝트는 Next.js 기반의 건강 관리 웹 프론트엔드입니다.
+이 프로젝트는 Next.js 기반의 영화 추천 웹 프론트엔드입니다.
 
 ## 시작 방법
 
