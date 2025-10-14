@@ -4,107 +4,29 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  fetchMovieDetails as getMovieDetails,
+} from "@/lib/tmdbAPI";
+import { api } from "@/lib/api";
+
 
 interface Review {
-  id: string;
-  movieId: string;
+  id: number;
+  tmdbMovieId: string;
   movieTitle: string;
-  moviePoster: string;
-  author: string;
-  content: string;
+  nickname: string;
   rating: number;
+  profileImage?: string;
   likes: number;
-  isLiked: boolean;
-  createdAt: Date;
+  content: string;
+  createdAt: string;
+  updatedAt?: string;
+  isLiked?: boolean;
 }
 
-// 샘플 후기 데이터
-const sampleReviews: Review[] = [
-  {
-    id: "review1",
-    movieId: "1",
-    movieTitle: "인터스텔라",
-    moviePoster:
-      "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-    author: "우주덕후",
-    content:
-      "과학적 설정과 감동적인 스토리가 완벽하게 조화된 작품! 매튜 맥커너히의 연기와 한스 짐머의 OST가 정말 압도적이었습니다. 시간과 공간을 넘나드는 서사가 너무 감동적이에요 😭",
-    rating: 5,
-    likes: 127,
-    isLiked: false,
-    createdAt: new Date(2024, 7, 25),
-  },
-  {
-    id: "review2",
-    movieId: "2",
-    movieTitle: "기생충",
-    moviePoster:
-      "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
-    author: "영화평론가",
-    content:
-      "봉준호 감독의 연출력이 정말 대단했습니다. 사회적 메시지를 영화 속에 자연스럽게 녹여낸 점이 인상적이었어요. 배우들의 연기도 모두 훌륭했고 특히 송강호님의 연기가 최고!",
-    rating: 5,
-    likes: 89,
-    isLiked: true,
-    createdAt: new Date(2024, 7, 23),
-  },
-  {
-    id: "review3",
-    movieId: "1",
-    movieTitle: "인터스텔라",
-    moviePoster:
-      "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-    author: "SF매니아",
-    content:
-      "블랙홀과 웜홀의 시각적 표현이 정말 놀라웠어요. 과학 자문을 제대로 받아서 만든 티가 확실히 납니다. 딸과 아버지의 감정적 교감도 너무 좋았고요!",
-    rating: 4,
-    likes: 56,
-    isLiked: false,
-    createdAt: new Date(2024, 7, 20),
-  },
-  {
-    id: "review4",
-    movieId: "3",
-    movieTitle: "어벤져스: 엔드게임",
-    moviePoster:
-      "https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
-    author: "마블팬",
-    content:
-      "11년간의 MCU 여정의 완벽한 마무리! 모든 히어로들이 한자리에 모이는 장면에서 소름이 돋았습니다. 아이언맨의 마지막 장면은 정말 눈물이... 😢",
-    rating: 5,
-    likes: 203,
-    isLiked: false,
-    createdAt: new Date(2024, 7, 18),
-  },
-  {
-    id: "review5",
-    movieId: "4",
-    movieTitle: "라라랜드",
-    moviePoster:
-      "https://image.tmdb.org/t/p/w500/uDO8zWDhfWwoFdKS4fzkUJt0Rf0.jpg",
-    author: "뮤지컬러버",
-    content:
-      "음악과 영상미가 환상적인 조합이었어요! 에마 스톤과 라이언 고슬링의 케미스트리도 완벽했고, 특히 City of Stars 넘버는 정말 아름다웠습니다 🎵",
-    rating: 4,
-    likes: 78,
-    isLiked: true,
-    createdAt: new Date(2024, 7, 15),
-  },
-  {
-    id: "review6",
-    movieId: "2",
-    movieTitle: "기생충",
-    moviePoster:
-      "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
-    author: "시네마틱",
-    content:
-      "계층 사회의 현실을 너무나 적나라하게 보여준 작품. 웃음과 긴장, 공포가 절묘하게 섞여있어서 마지막까지 몰입해서 볼 수 있었어요.",
-    rating: 5,
-    likes: 94,
-    isLiked: false,
-    createdAt: new Date(2024, 7, 12),
-  },
-];
+interface MovieDetail {
+  poster_path: string;
+}
 
 function ReviewsPage() {
   const searchParams = useSearchParams();
@@ -114,11 +36,33 @@ function ReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [sortBy, setSortBy] = useState<"latest" | "popular">("latest");
 
+  const [movie, setMovie] = useState<MovieDetail | null>(null); // 타입 지정
+
   useEffect(() => {
-    // 특정 영화의 후기만 필터링하거나 전체 후기 표시
-    let filteredReviews = movieId
-      ? sampleReviews.filter((review) => review.movieId === movieId)
-      : sampleReviews;
+    async function fetchData() {
+      if (movieId) {
+        try {
+          // 백엔드 리뷰 가져오기
+          const responses = await api.get(`/reviews/movie/${movieId}`);
+          setReviews(responses.data);
+
+          // TMDB API로 영화 정보 가져오기
+          const movieData = await getMovieDetails(movieId);
+
+          setMovie(movieData);
+        } catch (err) {
+          console.log("데이터 가져오기 실패:", err);
+          setReviews([]);
+        }
+      }
+    }
+
+    fetchData();
+  }, [movieId]);
+
+  /* let filteredReviews = movieId
+      ? reviews.filter((review) => review.tmdbMovieId === movieId)
+      : reviews;
 
     // 정렬
     if (sortBy === "latest") {
@@ -130,8 +74,8 @@ function ReviewsPage() {
     }
 
     setReviews(filteredReviews);
-  }, [movieId, sortBy]);
-
+  }, [movieId, sortBy]); */
+/* 
   const handleLikeToggle = (reviewId: string) => {
     setReviews((prevReviews) =>
       prevReviews.map((review) => {
@@ -145,7 +89,7 @@ function ReviewsPage() {
         return review;
       })
     );
-  };
+  }; */
 
   return (
     <div className="min-h-screen bg-black text-white mt-16">
@@ -178,20 +122,27 @@ function ReviewsPage() {
           >
             인기순
           </button>
+          <div className="text-gray-100 text-right w-full text-lg ">
+            <div>
+              {(reviews.reduce((sum, r) => sum + r.rating, 0) / (reviews.length || 1)).toFixed(1)}
+              <span className="text-gray-300 font-normal text-base ml-1">평균별점</span>
+              <span className="text-gray-300 font-normal text-base">({reviews.length}명)</span>
+            </div>
+          </div>
         </div>
 
         {/* 후기 목록 */}
         <div className="space-y-6">
           {reviews.map((review) => (
-            <div key={review.id} className="flex gap-5 ">
-              <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden p-4 ">
-                <div className="flex gap-4">
+            <div key={review.id} className="flex gap-5">
+              <div className="bg-gray-800 border w-full border-gray-700 rounded-xl overflow-hidden p-4 ">
+                <div className="flex">
                   {/* 영화 포스터 (전체 후기 페이지에서만 표시) */}
-                  {!movieId && (
-                    <Link href={`/movie/${review.movieId}`}>
+                  {!movieId && movie && (
+                    <Link href={`/movie/${review.tmdbMovieId}`}>
                       <div className="relative w-24 h-36 mt-8 ml-5 overflow-hidden cursor-pointer hover:scale-105 transition-transform">
                         <Image
-                          src={review.moviePoster}
+                          src={`https://image.tmdb.org/t/p/w500${movie.poster_path || "/images/default-poster.jpg"}`}
                           alt={review.movieTitle}
                           fill
                           className="object-cover"
@@ -200,10 +151,10 @@ function ReviewsPage() {
                     </Link>
                   )}
                   {/* 헤더 */}
-                  <div>
-                    <div className="flex items-center justify-between px-6 pt-6 pb-2">
+                  <div className="w-full">
+                    <div className="flex items-center justify-between px-6 pt-4 pb-4">
                       <div className="flex items-center w-full justify-between">
-                        <p className="text-3xl font-semibold">
+                        <p className="text-xl font-semibold">
                           {review.movieTitle}
                         </p>
                         <div className="flex items-center bg-gray-100 border border-gray-300 px-3 py-0.5 rounded-full w-fit">
@@ -224,31 +175,48 @@ function ReviewsPage() {
                       </div>
                     </div>
                     {/* 컨텐츠 */}
-                    <div className="px-8 py-4">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        fill="currentColor"
-                        viewBox="0 0 16 16"
-                        className="mb-3 text-gray-400"
-                      >
-                        <path d="M12 12a1 1 0 0 0 1-1V8.558a1 1 0 0 0-1-1h-1.388q0-.527.062-1.054.093-.558.31-.992t.559-.683q.34-.279.868-.279V3q-.868 0-1.52.372a3.3 3.3 0 0 0-1.085.992 4.9 4.9 0 0 0-.62 1.458A7.7 7.7 0 0 0 9 7.558V11a1 1 0 0 0 1 1zm-6 0a1 1 0 0 0 1-1V8.558a1 1 0 0 0-1-1H4.612q0-.527.062-1.054.094-.558.31-.992.217-.434.559-.683.34-.279.868-.279V3q-.868 0-1.52.372a3.3 3.3 0 0 0-1.085.992 4.9 4.9 0 0 0-.62 1.458A7.7 7.7 0 0 0 3 7.558V11a1 1 0 0 0 1 1z" />
-                      </svg>
-                      <p className="text-gray-200 leading-relaxed">
+                    <div className="px-6 py-2 relative min-h-16">
+                      <div className="absolute top-2 left-5">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="15"
+                          height="15"
+                          fill="currentColor"
+                          viewBox="0 0 16 16"
+                          className="mb-3 text-gray-400"
+                        >
+                          <path d="M12 12a1 1 0 0 0 1-1V8.558a1 1 0 0 0-1-1h-1.388q0-.527.062-1.054.093-.558.31-.992t.559-.683q.34-.279.868-.279V3q-.868 0-1.52.372a3.3 3.3 0 0 0-1.085.992 4.9 4.9 0 0 0-.62 1.458A7.7 7.7 0 0 0 9 7.558V11a1 1 0 0 0 1 1zm-6 0a1 1 0 0 0 1-1V8.558a1 1 0 0 0-1-1H4.612q0-.527.062-1.054.094-.558.31-.992.217-.434.559-.683.34-.279.868-.279V3q-.868 0-1.52.372a3.3 3.3 0 0 0-1.085.992 4.9 4.9 0 0 0-.62 1.458A7.7 7.7 0 0 0 3 7.558V11a1 1 0 0 0 1 1z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-200 leading-relaxed px-6">
                         {review.content}
                       </p>
                     </div>
                     {/* 작성자 / 좋아요 */}
                     <div className="flex justify-between items-center px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 bg-gradient-to-br from-violet-500 to-pink-500 rounded-full flex items-center justify-center">
+                        {/* <div className="w-7 h-7 bg-gradient-to-br from-violet-500 to-pink-500 rounded-full flex items-center justify-center">
                           <span className="text-white font-semibold text-sm">
-                            {review.author.charAt(0)}
+                            {review.nickname.charAt(0)}
                           </span>
+                        </div> */}
+                        <div className="w-7 h-7 bg-gradient-to-br from-violet-600 to-pink-600 rounded-full flex items-center justify-center">
+                          {review.profileImage ? (
+                            <Image
+                              src={review.profileImage}
+                              alt="프로필 이미지"
+                              width={40}
+                              height={40}
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <span className="text-white font-medium rounded-full">
+                              {review.nickname?.charAt(0).toUpperCase()}
+                            </span>
+                          )}
                         </div>
                         <div>
-                          <h4 className="text-gray-300">{review.author}</h4>
+                          <h4 className="text-gray-300">{review.nickname}</h4>
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
@@ -273,11 +241,9 @@ function ReviewsPage() {
                           </svg>
                         </button>
                         {/* 좋아요 수 */}
-                        {review.likes > 0 && (
-                          <div className="text-sm font-semibold text-gray-300">
-                            좋아요 {review.likes}
-                          </div>
-                        )}
+                        <div className="text-sm font-semibold text-gray-300">
+                          공감 {review.likes}
+                        </div>
                       </div>
                     </div>
                   </div>

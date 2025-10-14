@@ -249,7 +249,7 @@ export default function Header() {
               {isLoggedIn && (
                 <button
                   onClick={toggleProfile}
-                  className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center overflow-hidden border border-gray-400"
+                  className="w-7 h-7 bg-gradient-to-br from-violet-600 to-pink-600 rounded-full flex items-center justify-center"
                 >
                   {userProfileImage ? (
                     <Image
@@ -272,7 +272,7 @@ export default function Header() {
                   {/* 사용자 정보 섹션 */}
                   <div className="px-4 py-3 border-b border-gray-700">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center overflow-hidden border border-gray-400">
+                      <div className="w-9 h-9 bg-gradient-to-br from-violet-600 to-pink-600 rounded-full flex items-center justify-center">
                         {userProfileImage ? (
                           <Image
                             src={userProfileImage}
