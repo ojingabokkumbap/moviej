@@ -23,7 +23,9 @@ public class UserCollection {
     private User user;
 
     private Long movieId;  // 영화 고유 ID
+    
     private String title;
 
     private LocalDateTime createdAt;
+    private Double rating; // ⭐ 개인 선호도 점수 (nullable 가능)
 }
