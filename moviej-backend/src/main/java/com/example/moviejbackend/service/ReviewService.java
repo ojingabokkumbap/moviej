@@ -3,11 +3,15 @@ package com.example.moviejbackend.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.moviejbackend.domain.Review;
 import com.example.moviejbackend.domain.ReviewLike;
 import com.example.moviejbackend.domain.User;
+import com.example.moviejbackend.dto.response.PagedReviewResponseDto;
 import com.example.moviejbackend.dto.response.ReviewResponseDto;
 import com.example.moviejbackend.repository.ReviewLikeRepository;
 import com.example.moviejbackend.repository.ReviewRepository;
@@ -26,21 +30,149 @@ public class ReviewService {
     @Autowired
     private ReviewLikeRepository reviewLikeRepository;
 
-    // 전체 리뷰 조회
-    public List<ReviewResponseDto> getAllReviews() {
-        List<Review> reviews = reviewRepository.findAllByOrderByCreatedAtDesc();  // 최신순 전체 리뷰
-        return reviews.stream().map(review -> new ReviewResponseDto(
-            review.getId(),
-            review.getTmdbMovieId(),
-            review.getMovieTitle(),
-            review.getTitle(),
-            review.getNickname(),
-            review.getProfileImage(),
-            review.getRating(),
-            review.getContent(),
-            review.getLikes(),
-            review.getCreatedAt()
-        )).collect(Collectors.toList());
+    // 전체 리뷰 조회 (isLiked 포함)
+    public List<ReviewResponseDto> getAllReviewsWithLike(String email) {
+        User user = userRepository.findByEmail(email).orElse(null);
+        List<Review> reviews = reviewRepository.findAllByOrderByCreatedAtDesc();
+        return reviews.stream().map(review -> {
+            boolean isLiked = false;
+            if (user != null) {
+                isLiked = reviewLikeRepository.existsByReviewAndUser(review, user);
+            }
+            return new ReviewResponseDto(
+                review.getId(),
+                review.getTmdbMovieId(),
+                review.getMovieTitle(),
+                review.getTitle(),
+                review.getNickname(),
+                review.getProfileImage(),
+                review.getRating(),
+                review.getContent(),
+                review.getLikes(),
+                review.getCreatedAt(),
+                isLiked
+            );
+        }).collect(Collectors.toList());
+    }
+
+    // 전체 리뷰 페이지네이션 조회 (isLiked 포함)
+    public PagedReviewResponseDto getAllReviewsPagedWithLike(String email, Pageable pageable) {
+        User user = userRepository.findByEmail(email).orElse(null);
+        Page<Review> reviewPage = reviewRepository.findAllByOrderByCreatedAtDesc(pageable);
+
+        List<ReviewResponseDto> content = reviewPage.getContent().stream()
+            .map(review -> {
+                boolean isLiked = false;
+                if (user != null) {
+                    isLiked = reviewLikeRepository.existsByReviewAndUser(review, user);
+                }
+                return new ReviewResponseDto(
+                    review.getId(),
+                    review.getTmdbMovieId(),
+                    review.getMovieTitle(),
+                    review.getTitle(),
+                    review.getNickname(),
+                    review.getProfileImage(),
+                    review.getRating(),
+                    review.getContent(),
+                    review.getLikes(),
+                    review.getCreatedAt(),
+                    isLiked
+                );
+            }).collect(Collectors.toList());
+
+        return new PagedReviewResponseDto(
+            content,
+            reviewPage.getNumber(),
+            reviewPage.getSize(),
+            reviewPage.getTotalElements(),
+            reviewPage.getTotalPages(),
+            reviewPage.isFirst(),
+            reviewPage.isLast()
+        );
+    }
+
+    // 전체 리뷰 좋아요순 조회 (메인페이지용 - 이메일 불필요)
+    public List<ReviewResponseDto> getAllReviewsByLikes(int limit) {
+        List<Review> reviews = reviewRepository.findAllByOrderByLikesDescCreatedAtDesc();
+        return reviews.stream()
+            .limit(limit)
+            .map(review -> new ReviewResponseDto(
+                review.getId(),
+                review.getTmdbMovieId(),
+                review.getMovieTitle(),
+                review.getTitle(),
+                review.getNickname(),
+                review.getProfileImage(),
+                review.getRating(),
+                review.getContent(),
+                review.getLikes(),
+                review.getCreatedAt(),
+                false  // 로그인 안 한 상태이므로 isLiked는 항상 false
+            ))
+            .collect(Collectors.toList());
+    }
+
+    // 영화별 전체 리뷰 조회 (isLiked 포함)
+    public List<ReviewResponseDto> getMovieReviewsWithLike(String tmdbMovieId, String email) {
+        User user = userRepository.findByEmail(email).orElse(null);
+        List<Review> reviews = reviewRepository.findByTmdbMovieIdOrderByCreatedAtDesc(tmdbMovieId);
+        return reviews.stream().map(review -> {
+            boolean isLiked = false;
+            if (user != null) {
+                isLiked = reviewLikeRepository.existsByReviewAndUser(review, user);
+            }
+            return new ReviewResponseDto(
+                review.getId(),
+                review.getTmdbMovieId(),
+                review.getMovieTitle(),
+                review.getTitle(),
+                review.getNickname(),
+                review.getProfileImage(),
+                review.getRating(),
+                review.getContent(),
+                review.getLikes(),
+                review.getCreatedAt(),
+                isLiked
+            );
+        }).collect(Collectors.toList());
+    }
+
+    // 영화별 페이지네이션 리뷰 조회 (isLiked 포함)
+    public PagedReviewResponseDto getMovieReviewsPagedWithLike(String tmdbMovieId, String email, Pageable pageable) {
+        User user = userRepository.findByEmail(email).orElse(null);
+        Page<Review> reviewPage = reviewRepository.findByTmdbMovieIdOrderByCreatedAtDesc(tmdbMovieId, pageable);
+
+        List<ReviewResponseDto> content = reviewPage.getContent().stream()
+            .map(review -> {
+                boolean isLiked = false;
+                if (user != null) {
+                    isLiked = reviewLikeRepository.existsByReviewAndUser(review, user);
+                }
+                return new ReviewResponseDto(
+                    review.getId(),
+                    review.getTmdbMovieId(),
+                    review.getMovieTitle(),
+                    review.getTitle(),
+                    review.getNickname(),
+                    review.getProfileImage(),
+                    review.getRating(),
+                    review.getContent(),
+                    review.getLikes(),
+                    review.getCreatedAt(),
+                    isLiked
+                );
+            }).collect(Collectors.toList());
+
+        return new PagedReviewResponseDto(
+            content,
+            reviewPage.getNumber(),
+            reviewPage.getSize(),
+            reviewPage.getTotalElements(),
+            reviewPage.getTotalPages(),
+            reviewPage.isFirst(),
+            reviewPage.isLast()
+        );
     }
 
     // 리뷰작성
@@ -62,52 +194,45 @@ public class ReviewService {
         return reviewRepository.save(review);
     }
 
-     // 새 메서드: 영화 ID로 리뷰 조회
-    public List<ReviewResponseDto> getMovieReviews(String tmdbMovieId) {
-        // 1. 리포지토리에서 최신순으로 리뷰 리스트 가져오기
-        List<Review> reviews = reviewRepository.findByTmdbMovieIdOrderByCreatedAtDesc(tmdbMovieId);
-        
-        // 2. Review 객체를 ReviewResponse로 변환 (프론트에 필요한 데이터만)
-        return reviews.stream().map(review -> new ReviewResponseDto(
-            review.getId(),
-            review.getTmdbMovieId(),
-            review.getMovieTitle(),
-            review.getTitle(),
-            review.getNickname(),  // User의 nickname
-            review.getProfileImage(),  // User의 profileImage
-            review.getRating(),
-            review.getContent(),
-            review.getLikes(),
-            review.getCreatedAt()
-
-        )).collect(Collectors.toList());
-    }
-
     @Transactional
-    // 리뷰 좋아요/좋아요 취소 토글
-    public void toggleLikeReview(Long reviewId, String email) {
-        // 1. email로 사용자 찾기
+    // 리뷰 좋아요/좋아요 취소 토글 -> 업데이트된 ReviewResponseDto 반환
+    public ReviewResponseDto toggleLikeReview(Long reviewId, String email) {
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        
-        // 2. 리뷰 찾기
         Review review = reviewRepository.findById(reviewId)
             .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
         
-        // 3. 이미 좋아요 했는지 체크
+        // 좋아요 토글
         if (reviewLikeRepository.existsByReviewAndUser(review, user)) {
-            // 이미 좋아요 했으면 취소
+            // 좋아요 취소
             reviewLikeRepository.deleteByReviewAndUser(review, user);
-            review.setLikes(review.getLikes() - 1);
-            reviewRepository.save(review);
+            review.setLikes(Math.max(0, review.getLikes() - 1));
         } else {
-            // 안 했으면 추가
+            // 좋아요 추가
             ReviewLike reviewLike = new ReviewLike();
             reviewLike.setReview(review);
             reviewLike.setUser(user);
             reviewLikeRepository.save(reviewLike);
             review.setLikes(review.getLikes() + 1);
-            reviewRepository.save(review);
         }
+        reviewRepository.save(review);
+
+        // 최신 isLiked 상태 계산
+        boolean isLiked = reviewLikeRepository.existsByReviewAndUser(review, user);
+        
+        // 업데이트된 DTO 반환
+        return new ReviewResponseDto(
+            review.getId(),
+            review.getTmdbMovieId(),
+            review.getMovieTitle(),
+            review.getTitle(),
+            review.getNickname(),
+            review.getProfileImage(),
+            review.getRating(),
+            review.getContent(),
+            review.getLikes(),
+            review.getCreatedAt(),
+            isLiked
+        );
     }
 }

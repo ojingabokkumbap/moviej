@@ -79,7 +79,8 @@ interface MovieReview {
   content: string;
   createdAt: string;
   updatedAt?: string;
-  isLiked?: boolean;
+  liked?: boolean;
+  email?: string;
 }
 
 export default function MovieDetailPage() {
@@ -113,19 +114,14 @@ export default function MovieDetailPage() {
 
       try {
         setIsLoading(true);
-        const [
-          movieData,
-          creditsData,
-          similarData,
-          videosData,
-          imagesData,
-        ] = await Promise.all([
-          getMovieDetails(movieId),
-          fetchDetailedMovieCredits(movieId),
-          fetchSimilarMovies(movieId),
-          fetchMovieVideos(movieId),
-          fetchMovieImages(movieId),
-        ]);
+        const [movieData, creditsData, similarData, videosData, imagesData] =
+          await Promise.all([
+            getMovieDetails(movieId),
+            fetchDetailedMovieCredits(movieId),
+            fetchSimilarMovies(movieId),
+            fetchMovieVideos(movieId),
+            fetchMovieImages(movieId),
+          ]);
 
         setMovie(movieData);
         setCredits(creditsData);
@@ -138,13 +134,18 @@ export default function MovieDetailPage() {
 
         // 내 백엔드 리뷰만 호출
         try {
-          const responses = await api.get(`/reviews/movie/${movieId}`);
+          const userEmail = localStorage.getItem("userEmail");
+
+          const responses = await api.get(`/reviews/movie/${movieId}`, {
+            params: {
+              email: userEmail,
+            },
+          });
           setReviews(responses.data); // 백엔드 리뷰로 설정
         } catch (reviewErr) {
           console.log(reviewErr);
           setReviews([]); // 실패해도 상세페이지는 정상 노출
         }
-
       } catch (err) {
         setError("영화 정보를 불러오는데 실패했습니다.");
         console.error("Error fetching movie details:", err);
@@ -177,10 +178,10 @@ export default function MovieDetailPage() {
         // 리뷰 새로고침
         const reviewsRes = await api.get(`/reviews/movie/${movieId}`);
         setReviews(reviewsRes.data);
-
       } catch (err) {
-        showNotification("리뷰 등록에 실패했습니다.", "error");
-        console.log("리뷰 등록 실패:", err);
+        const errorMsg =
+           (err as any)?.response?.data?.message || "리뷰 등록에 실패했습니다.";
+        showNotification(errorMsg, "error");
       }
     }
   };
@@ -193,13 +194,17 @@ export default function MovieDetailPage() {
         return;
       }
 
-      // 백엔드 좋아요 API 호출 (가정)
-      await api.post(`/reviews/${reviewId}/like?email=${userEmail}`);
-      
-      // 리뷰 목록 새로고침
-      const reviewsRes = await api.get(`/reviews/movie/${movieId}`);
-      setReviews(reviewsRes.data);
-      
+      // 서버에서 최신 review 상태를 받아옴 (isLiked, likes 등)
+      const res = await api.post(
+        `/reviews/${reviewId}/like?email=${userEmail}`
+      );
+      const updatedReview = res.data; // 서버에서 최신 review 반환
+
+      setReviews((prev) =>
+        prev.map((review) =>
+          review.id === reviewId ? { ...review, ...updatedReview } : review
+        )
+      );
     } catch (err) {
       console.error("좋아요 처리 실패:", err);
       showNotification("좋아요 처리에 실패했습니다.", "error");
@@ -663,9 +668,7 @@ export default function MovieDetailPage() {
                           onClick={() => setShowAllSimilar(!showAllSimilar)}
                           className="px-6 py-2 border border-gray-200 hover:bg-gray-200 hover:text-gray-900 transition-colors rounded-lg"
                         >
-                          {showAllSimilar
-                            ? "접기"
-                            : `더보기`}
+                          {showAllSimilar ? "접기" : `더보기`}
                         </button>
                       </div>
                     )}
@@ -678,7 +681,23 @@ export default function MovieDetailPage() {
 
                   {/* 리뷰 섹션  */}
                   <div className="my-16">
-                    <h2 className="text-3xl font-medium mb-8">인기 감상평</h2>
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-3xl font-medium mb-8">인기 감상평</h2>
+                      {/* 후기 더보기 버튼 */}
+                      {reviews.length > 0 && (
+                        <div className="text-center">
+                          <Link
+                            href={`/reviews?movieId=${movieId}&movieTitle=${encodeURIComponent(
+                              movie?.title || ""
+                            )}`}
+                          >
+                            <button className="text-gray-200 font-normal ">
+                              더보기
+                            </button>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex gap-5">
                       {reviews.length > 0 ? (
                         reviews.slice(0, 4).map((review) => (
@@ -733,39 +752,43 @@ export default function MovieDetailPage() {
 
                             {/* 컨텐츠 */}
                             <div className="px-8">
-                              <p className="text-violet-200 leading-relaxed text-sm mb-4 min-h-[60px]">
+                              <p className="text-violet-200 leading-relaxed text-sm mb-4 min-h-[60px] max-h-[60px]">
                                 {review.content}
                               </p>
                             </div>
                             <div className="px-8 pb-4">
-                            <div className="flex items-center justify-end gap-2 mb-3">
-                              <button
-                                onClick={() => handleLikeToggle(review.id)}
-                                className={`transition-all duration-200 ${
-                                  review.isLiked ? "text-violet-500 hover:text-red-400" : "text-violet-500 hover:text-violet-700"
-                                }`}
-                              >
-                                <svg
-                                  className={`w-4 h-4 transition-transform duration-200 ${
-                                    review.isLiked ? "scale-110" : "scale-100"
+                              <div className="flex items-center justify-end gap-2 mb-3">
+                                <button
+                                  onClick={() => handleLikeToggle(review.id)}
+                                  className={`transition-all duration-200 ${
+                                    review.liked
+                                      ? "text-violet-500 hover:text-violet-400" // 내가 누른 공감: 핑크/빨강
+                                      : "text-gray-400 hover:text-violet-500" // 안 누른 공감: 회색/보라
                                   }`}
-                                  fill={review.likes >= 1 ? "currentColor" : "none"}
-                                  stroke="currentColor"
-                                  strokeWidth="1"
-                                  viewBox="0 0 24 24"
-                                  style={{
-                                    transition: "transform 0.2s, fill 0.2s",
-                                  }}
                                 >
-                                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                                </svg>
-                              </button>
-                              {/* 좋아요 수 */}
-                              <div className="text-sm text-gray-300">
-                                공감 {review.likes}개
+                                  <svg
+                                    className={`w-4 h-4 transition-transform duration-200 ${
+                                      review.liked ? "scale-110" : "scale-100"
+                                    }`}
+                                    fill={
+                                      review.liked ? "currentColor" : "none"
+                                    } // isLiked에 따라 채움/빈 상태
+                                    stroke="currentColor" // button 색상 상속
+                                    strokeWidth="1"
+                                    viewBox="0 0 24 24"
+                                    style={{
+                                      transition: "transform 0.2s, fill 0.2s",
+                                    }}
+                                  >
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                  </svg>
+                                </button>
+                                {/* 좋아요 수 */}
+                                <div className="text-sm font-semibold text-gray-300">
+                                  공감 {review.likes}
+                                </div>
                               </div>
                             </div>
-                          </div>
                           </div>
                         ))
                       ) : (
@@ -774,19 +797,6 @@ export default function MovieDetailPage() {
                         </p>
                       )}
                     </div>
-                    
-                    {/* 후기 더보기 버튼 */}
-                    {reviews.length > 0 && (
-                      <div className="text-center mt-8">
-                        <Link 
-                          href={`/reviews?movieId=${movieId}&movieTitle=${encodeURIComponent(movie?.title || '')}`}
-                        >
-                          <button className="px-8 py-3 border border-violet-600 text-violet-400 hover:bg-violet-600 hover:text-white transition-colors rounded-lg font-medium">
-                            이 영화의 후기 더보기
-                          </button>
-                        </Link>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>

@@ -13,9 +13,11 @@ public class ReviewResponseDto {
     private String content;
     private Integer likes;
     private LocalDateTime createdAt;
+    private boolean isLiked; // 사용자가 이 리뷰에 공감했는지 여부
 
-    // 생성자
-    public ReviewResponseDto(Long id, String tmdbMovieId, String movieTitle, String title, String nickname, String profileImage, Integer rating, String content, Integer likes, LocalDateTime createdAt) {
+    public ReviewResponseDto(Long id, String tmdbMovieId, String movieTitle, String title,
+                            String nickname, String profileImage, Integer rating, String content,
+                            Integer likes, LocalDateTime createdAt, boolean isLiked) {
         this.id = id;
         this.tmdbMovieId = tmdbMovieId;
         this.movieTitle = movieTitle;
@@ -26,6 +28,7 @@ public class ReviewResponseDto {
         this.content = content;
         this.likes = likes;
         this.createdAt = createdAt;
+        this.isLiked = isLiked;
     }
 
     // Getters (필요 시 Setters 추가)
@@ -39,4 +42,7 @@ public class ReviewResponseDto {
     public String getContent() { return content; }
     public Integer getLikes() { return likes; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public boolean isLiked() { return isLiked; }
+    public void setLiked(boolean liked) { isLiked = liked; }
 }

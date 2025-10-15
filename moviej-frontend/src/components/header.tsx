@@ -257,7 +257,7 @@ export default function Header() {
                       alt="프로필 이미지"
                       width={40}
                       height={40}
-                      className="w-full h-full object-cover "
+                      className="w-full h-full object-cover rounded-full"
                     />
                   ) : (
                     <span className="text-white font-medium">
@@ -279,7 +279,7 @@ export default function Header() {
                             alt="프로필 이미지"
                             width={45}
                             height={45}
-                            className="w-full h-full object-cover "
+                            className="w-full h-full object-cover rounded-full"
                           />
                         ) : (
                           <span className="text-white font-medium">
