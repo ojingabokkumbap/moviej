@@ -12,8 +12,9 @@ import {
   fetchSimilarMovies,
   fetchMovieVideos,
   fetchMovieImages,
-  fetchMovieReviews,
 } from "@/lib/tmdbAPI";
+import { api } from "@/lib/api";
+import { useNotification } from "@/contexts/NotificationContext";
 
 interface MovieDetail {
   id: number;
@@ -68,20 +69,21 @@ interface MovieImage {
 }
 
 interface MovieReview {
-  id: string;
-  author: string;
-  author_details: {
-    name: string;
-    username: string;
-    avatar_path: string;
-    rating: number;
-  };
+  id: number;
+  tmdbMovieId: string;
+  movieTitle: string;
+  nickname: string;
+  rating: number;
+  profileImage?: string;
+  likes: number;
   content: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt?: string;
+  isLiked?: boolean;
 }
 
 export default function MovieDetailPage() {
+  const { showNotification } = useNotification();
   const params = useParams();
   const router = useRouter();
   const movieId = params.id as string;
@@ -100,17 +102,6 @@ export default function MovieDetailPage() {
   const [showAllCast, setShowAllCast] = useState(false);
   const [showAllSimilar, setShowAllSimilar] = useState(false);
   const [showAllImages, setShowAllImages] = useState(false);
-  const [userComments, setUserComments] = useState<
-    {
-      id: string;
-      author: string;
-      content: string;
-      createdAt: Date;
-      rating: number;
-      likes: number;
-      isLiked: boolean;
-    }[]
-  >([]);
   const [activeTab, setActiveTab] = useState<"videos" | "images">("videos");
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [modalRating, setModalRating] = useState(0);
@@ -128,14 +119,12 @@ export default function MovieDetailPage() {
           similarData,
           videosData,
           imagesData,
-          reviewsData,
         ] = await Promise.all([
           getMovieDetails(movieId),
           fetchDetailedMovieCredits(movieId),
           fetchSimilarMovies(movieId),
           fetchMovieVideos(movieId),
           fetchMovieImages(movieId),
-          fetchMovieReviews(movieId),
         ]);
 
         setMovie(movieData);
@@ -146,7 +135,16 @@ export default function MovieDetailPage() {
           backdrops: imagesData.backdrops.slice(0, 10), // 최대 10개만
           posters: imagesData.posters.slice(0, 10),
         });
-        setReviews(reviewsData);
+
+        // 내 백엔드 리뷰만 호출
+        try {
+          const responses = await api.get(`/reviews/movie/${movieId}`);
+          setReviews(responses.data); // 백엔드 리뷰로 설정
+        } catch (reviewErr) {
+          console.log(reviewErr);
+          setReviews([]); // 실패해도 상세페이지는 정상 노출
+        }
+
       } catch (err) {
         setError("영화 정보를 불러오는데 실패했습니다.");
         console.error("Error fetching movie details:", err);
@@ -158,38 +156,54 @@ export default function MovieDetailPage() {
     fetchData();
   }, [movieId]);
 
-  const handleModalSubmit = () => {
+  const handleModalSubmit = async () => {
+    const userEmail = localStorage.getItem("userEmail");
+
     if (modalRating > 0) {
-      const review = {
-        id: Date.now().toString(),
-        author: "현재 사용자",
-        content: modalReview.trim() || "평점만 등록했습니다.",
-        createdAt: new Date(),
-        rating: modalRating,
-        likes: 0,
-        isLiked: false,
-      };
-      setUserComments([review, ...userComments]);
-      setShowRatingModal(false);
-      setModalRating(0);
-      setModalReview("");
+      try {
+        await api.post("/reviews", {
+          tmdbMovieId: movieId,
+          movieTitle: movie?.title || "",
+          rating: modalRating,
+          content: modalReview,
+          email: userEmail,
+        });
+
+        // 성공 처리 (예: 리뷰 목록 새로고침)
+        showNotification("리뷰가 성공적으로 등록되었습니다!", "success");
+        setShowRatingModal(false);
+        setModalRating(0);
+        setModalReview("");
+        // 리뷰 새로고침
+        const reviewsRes = await api.get(`/reviews/movie/${movieId}`);
+        setReviews(reviewsRes.data);
+
+      } catch (err) {
+        showNotification("리뷰 등록에 실패했습니다.", "error");
+        console.log("리뷰 등록 실패:", err);
+      }
     }
   };
 
-  // 좋아요 토글 함수
-  const handleLikeToggle = (commentId: string) => {
-    setUserComments((prevComments) =>
-      prevComments.map((comment) => {
-        if (comment.id === commentId) {
-          return {
-            ...comment,
-            likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1,
-            isLiked: !comment.isLiked,
-          };
-        }
-        return comment;
-      })
-    );
+  const handleLikeToggle = async (reviewId: number) => {
+    try {
+      const userEmail = localStorage.getItem("userEmail");
+      if (!userEmail) {
+        showNotification("로그인이 필요합니다.", "warning");
+        return;
+      }
+
+      // 백엔드 좋아요 API 호출 (가정)
+      await api.post(`/reviews/${reviewId}/like?email=${userEmail}`);
+      
+      // 리뷰 목록 새로고침
+      const reviewsRes = await api.get(`/reviews/movie/${movieId}`);
+      setReviews(reviewsRes.data);
+      
+    } catch (err) {
+      console.error("좋아요 처리 실패:", err);
+      showNotification("좋아요 처리에 실패했습니다.", "error");
+    }
   };
 
   if (isLoading) {
@@ -263,7 +277,7 @@ export default function MovieDetailPage() {
                     >
                       평가하기
                     </button>
-                    <button className="px-8 py-2 border border-gray-400 hover:bg-gray-50 hover:text-black transition-colors">
+                    <button className="px-8 py-2 border border-gray-300 hover:bg-gray-50 hover:text-black transition-colors">
                       리스트 추가
                     </button>
                   </div>
@@ -662,92 +676,107 @@ export default function MovieDetailPage() {
                     )}
                   </div>
 
-                  {/* 코멘트 섹션  */}
+                  {/* 리뷰 섹션  */}
                   <div className="my-16">
                     <h2 className="text-3xl font-medium mb-8">인기 감상평</h2>
                     <div className="flex gap-5">
-                      {userComments.slice(0, 4).map((comment) => (
-                        <div
-                          key={comment.id}
-                          className="bg-gray-900 bg-opacity-80 border border-gray-700 rounded-lg w-1/4"
-                        >
-                          {/* 헤더 - 프로필 정보 */}
-                          <div className="flex items-center justify-between px-8 py-6">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-pink-500 rounded-full flex items-center justify-center">
-                                <span className="text-gray-200 font-semibold text-sm">
-                                  {comment.author.charAt(0)}
-                                </span>
-                              </div>
-                              <div>
-                                <h4 className="font-semibold text-gray-200 text-sm">
-                                  {comment.author}
-                                </h4>
-                                <div className="flex items-center gap-1">
-                                  {Array.from({ length: 5 }).map((_, i) => (
-                                    <svg
-                                      key={i}
-                                      className={`w-3 h-3 ${
-                                        i < comment.rating
-                                          ? "text-yellow-300"
-                                          : "text-gray-600"
-                                      }`}
-                                      fill="currentColor"
-                                      viewBox="0 0 20 20"
-                                    >
-                                      <path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.955L10 0l2.951 5.955 6.561.955-4.756 4.635 1.122 6.545z" />
-                                    </svg>
-                                  ))}
-                                  <span className="text-xs text-gray-400 ml-1">
-                                    {comment.rating}/5
-                                  </span>
+                      {reviews.length > 0 ? (
+                        reviews.slice(0, 4).map((review) => (
+                          <div
+                            key={review.id}
+                            className="bg-zinc-800 bg-opacity-60 border border-gray-500 rounded-lg w-1/4"
+                          >
+                            {/* 헤더 - 프로필 정보 */}
+                            <div className="flex items-center justify-between px-8 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                                  {review.profileImage ? (
+                                    <Image
+                                      src={review.profileImage}
+                                      alt="프로필 이미지"
+                                      width={40}
+                                      height={40}
+                                      className="w-full h-full object-cover rounded-full"
+                                    />
+                                  ) : (
+                                    <span className="text-white font-medium rounded-full">
+                                      {review.nickname?.charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-gray-200 text-sm">
+                                    {review.nickname}
+                                  </h4>
+                                  <div className="flex items-center gap-1">
+                                    {Array.from({ length: 5 }).map((_, i) => (
+                                      <svg
+                                        key={i}
+                                        className={`w-3 h-3 ${
+                                          i < review.rating
+                                            ? "text-yellow-300"
+                                            : "text-gray-600"
+                                        }`}
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.955L10 0l2.951 5.955 6.561.955-4.756 4.635 1.122 6.545z" />
+                                      </svg>
+                                    ))}
+                                    <span className="text-xs text-gray-400 ml-1">
+                                      {review.rating}점
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
 
-                          {/* 컨텐츠 */}
-                          <div className="px-8">
-                            <p className="text-gray-200 leading-relaxed text-sm mb-4 min-h-[60px]">
-                              {comment.content}
-                            </p>
-                          </div>
-                          <div className="px-8 pb-4">
+                            {/* 컨텐츠 */}
+                            <div className="px-8">
+                              <p className="text-violet-200 leading-relaxed text-sm mb-4 min-h-[60px]">
+                                {review.content}
+                              </p>
+                            </div>
+                            <div className="px-8 pb-4">
                             <div className="flex items-center justify-end gap-2 mb-3">
                               <button
-                                onClick={() => handleLikeToggle(comment.id)}
+                                onClick={() => handleLikeToggle(review.id)}
                                 className={`transition-all duration-200 ${
-                                  comment.isLiked
-                                    ? "text-gray-200 hover:text-red-400"
-                                    : "text-gray-400 hover:text-gray-300"
+                                  review.isLiked ? "text-violet-500 hover:text-red-400" : "text-violet-500 hover:text-violet-700"
                                 }`}
                               >
                                 <svg
                                   className={`w-4 h-4 transition-transform duration-200 ${
-                                    comment.isLiked ? "scale-110" : ""
+                                    review.isLiked ? "scale-110" : "scale-100"
                                   }`}
-                                  fill={
-                                    comment.isLiked ? "currentColor" : "none"
-                                  }
+                                  fill={review.likes >= 1 ? "currentColor" : "none"}
                                   stroke="currentColor"
                                   strokeWidth="1"
                                   viewBox="0 0 24 24"
+                                  style={{
+                                    transition: "transform 0.2s, fill 0.2s",
+                                  }}
                                 >
                                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                                 </svg>
                               </button>
                               {/* 좋아요 수 */}
                               <div className="text-sm text-gray-300">
-                                공감 {comment.likes}개
+                                공감 {review.likes}개
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-gray-400 text-center py-8">
+                          아직 리뷰가 없습니다. 첫 번째 리뷰를 남겨보세요!
+                        </p>
+                      )}
                     </div>
                     
                     {/* 후기 더보기 버튼 */}
-                    {userComments.length > 0 && (
+                    {reviews.length > 0 && (
                       <div className="text-center mt-8">
                         <Link 
                           href={`/reviews?movieId=${movieId}&movieTitle=${encodeURIComponent(movie?.title || '')}`}
@@ -757,12 +786,6 @@ export default function MovieDetailPage() {
                           </button>
                         </Link>
                       </div>
-                    )}
-                    
-                    {userComments.length === 0 && reviews.length === 0 && (
-                      <p className="text-gray-400 text-center py-8">
-                        아직 코멘트가 없습니다. 첫 번째 코멘트를 남겨보세요!
-                      </p>
                     )}
                   </div>
                 </div>

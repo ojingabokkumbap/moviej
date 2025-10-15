@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { useNotification } from "@/contexts/NotificationContext";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export default function LoginModal({
   onClose,
   onOpenSignUp,
 }: LoginModalProps) {
+  const { showNotification } = useNotification();
   const [email, setEmail] = useState("");
   const [rememberEmail, setRememberEmail] = useState(false);
   const [password, setPassword] = useState("");
@@ -58,10 +60,11 @@ export default function LoginModal({
         localStorage.setItem("userProfileImage", response.data.profileImage || "");
 
         window.dispatchEvent(new Event("storage"));
+        showNotification("로그인되었습니다.", "success");
         onClose();
       } catch (error) {
         console.error("로그인 실패:", error);
-        alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
+        showNotification("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.", "error");
       }
     } else if (mode === "findId") {
       try {
@@ -72,18 +75,18 @@ export default function LoginModal({
       } catch (error) {
         setFindIdResult("");
         console.error("아이디 찾기 실패:", error);
-        alert("해당 닉네임을 찾을 수 없습니다.");
+        showNotification("해당 닉네임을 찾을 수 없습니다.", "error");
       }
     } else if (mode === "findPassword") {
       try {
-        const response = await api.post("/users/password-reset-request", {
+        await api.post("/users/password-reset-request", {
           email: findEmail,
         });
-        alert("임시 비밀번호가 이메일로 발송되었습니다.");
+        showNotification("임시 비밀번호가 이메일로 발송되었습니다.", "success");
         setMode("login");
       } catch (error) {
         console.error("비밀번호 찾기 실패:", error);
-        alert("해당 이메일을 찾을 수 없습니다.");
+        showNotification("해당 이메일을 찾을 수 없습니다.", "error");
       }
     }
   };

@@ -1,6 +1,7 @@
 "use client";
 import { api } from "@/lib/api";
 import React, { useState, useEffect } from "react";
+import { useNotification } from "@/contexts/NotificationContext";
 
 interface SignUpModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export default function SignUpModal({
   onClose,
   onOpenLogin,
 }: SignUpModalProps) {
+  const { showNotification } = useNotification();
   const [email, setEmail] = useState("");
   const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
@@ -35,7 +37,7 @@ export default function SignUpModal({
 
     // 비밀번호 확인 검증
     if (password !== confirmPassword) {
-      alert("비밀번호가 일치하지 않습니다.");
+      showNotification("비밀번호가 일치하지 않습니다.", "error");
       return;
     }
 
@@ -46,7 +48,7 @@ export default function SignUpModal({
         password,
       });
 
-      alert(response.data.message || "회원가입이 완료되었습니다");
+      showNotification(response.data.message || "회원가입이 완료되었습니다!", "success");
 
       // 회원가입 성공 후 폼 초기화 및 모달 닫기
       setEmail("");
@@ -59,7 +61,7 @@ export default function SignUpModal({
       const errorMsg =
         error.response?.data?.error ||
         "회원가입에 실패했습니다. 다시 시도해주세요.";
-      alert(errorMsg);
+      showNotification(errorMsg, "error");
     }
   };
 

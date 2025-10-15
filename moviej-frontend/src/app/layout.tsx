@@ -7,14 +7,17 @@ import "@/app/globals.css";
 
 import Header from "@/components/header";
 import MovieChatBot from "@/components/MovieChatBot";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
       <body>
-        <Header />
-        {children}
-        <MovieChatBot />
+        <NotificationProvider>
+          <Header />
+          {children}
+          <MovieChatBot />
+        </NotificationProvider>
       </body>
     </html>
   );
