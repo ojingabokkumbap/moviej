@@ -12,4 +12,5 @@ public interface UserPreferenceRepository extends JpaRepository<UserPreference, 
 
     // ✅ 가장 최근에 저장된 사용자 선호도 한 건만 조회
     Optional<UserPreference> findTopByUserOrderByCreatedAtDesc(User user);
+    
 }

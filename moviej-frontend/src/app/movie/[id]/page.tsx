@@ -175,12 +175,15 @@ export default function MovieDetailPage() {
         setShowRatingModal(false);
         setModalRating(0);
         setModalReview("");
-        // 리뷰 새로고침
-        const reviewsRes = await api.get(`/reviews/movie/${movieId}`);
+
+        const reviewsRes = await api.get(`/reviews/movie/${movieId}`, {
+          params: { email: userEmail }
+        });
         setReviews(reviewsRes.data);
+        
       } catch (err) {
         const errorMsg =
-           (err as any)?.response?.data?.message || "리뷰 등록에 실패했습니다.";
+        (err as any)?.response?.data?.message || "리뷰 등록에 실패했습니다.";
         showNotification(errorMsg, "error");
       }
     }
