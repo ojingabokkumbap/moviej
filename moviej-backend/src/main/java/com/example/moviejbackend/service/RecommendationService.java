@@ -1,76 +1,99 @@
 package com.example.moviejbackend.service;
 
-import com.example.moviejbackend.domain.User;
-import com.example.moviejbackend.domain.UserCollection;
-import com.example.moviejbackend.domain.UserPreference;
-import com.example.moviejbackend.dto.request.ActorInfo;
-import com.example.moviejbackend.dto.request.GenreInfo;
-import com.example.moviejbackend.dto.request.MovieInfo;
+import com.example.moviejbackend.domain.*;
 import com.example.moviejbackend.dto.request.PreferenceRequestDto;
-import com.example.moviejbackend.repository.UserCollectionRepository;
 import com.example.moviejbackend.repository.UserPreferenceRepository;
 import com.example.moviejbackend.repository.UserRepository;
-
+import com.example.moviejbackend.repository.MovieInfoRepository;
 import lombok.RequiredArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class RecommendationService {
 
-    private final UserRepository userRepository;
-    private final UserPreferenceRepository userPreferenceRepository;
-    
-    @Transactional
-    public void saveUserPreference(Long userId, PreferenceRequestDto dto) {
-        if (dto == null) return;
+    // private final UserPreferenceService userPreferenceService;
+    private final UserRepository userRepository;               // ✅ 추가
+    private final UserPreferenceRepository userPreferenceRepository;  // 이미 있음
+    private final MovieInfoRepository movieInfoRepository;     // ✅ 추가
 
-        // 유저 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다. id=" + userId));
+    // public List<MovieWithScore> getRecommendedMoviesForUser(Long userId, List<MovieInfo> movieList) {
+    //     UserPreference preference = userPreferenceService.getUserPreferenceByUserId(userId);
+    //     if (preference == null) return List.of();
 
-        // DTO → 엔티티 변환
-        List<com.example.moviejbackend.domain.GenreInfo> genres = dto.getGenres().stream()
-                .map((com.example.moviejbackend.dto.request.GenreInfo g) ->
-                        com.example.moviejbackend.domain.GenreInfo.builder()
-                                .genreId(g.getId())
-                                .genreName(g.getName())
-                                .build())
-                .toList();
+    //     return movieList.stream()
+    //             .map(movie -> {
+    //                 double score = calculateScore(movie, preference);
+    //                 return new MovieWithScore(movie, score);
+    //             })
+    //             .collect(Collectors.toList());
+    // }
 
-        List<com.example.moviejbackend.domain.ActorInfo> actors = dto.getActors().stream()
-                .map((com.example.moviejbackend.dto.request.ActorInfo a) ->
-                        com.example.moviejbackend.domain.ActorInfo.builder()
-                                .actorId(a.getId())
-                                .actorName(a.getName())
-                                .build())
-                .toList();
+    // private double calculateScore(MovieInfo movie, UserPreference preference) {
+    //     double score = 0;
 
-        List<com.example.moviejbackend.domain.MovieInfo> movies = dto.getMovies().stream()
-                .map((com.example.moviejbackend.dto.request.MovieInfo m) ->
-                        com.example.moviejbackend.domain.MovieInfo.builder()
-                                .movieId(m.getId())
-                                .title(m.getTitle())
-                                .rating(m.getRating())
-                                .build())
-                .toList();
+    //     // 간단 예시: 장르 + 배우 일치 비율로 점수 계산
+    //     long genreMatch = preference.getGenres().stream()
+    //             .filter(g -> g.getGenreId().equals(movie.getGenreId())) // movie에 genreId 필요
+    //             .count();
 
-        UserPreference preference = UserPreference.builder()
-                .user(user)
-                .genres(genres)
-                .actors(actors)
-                .movies(movies)
-                .createdAt(LocalDateTime.now())
-                .build();
+    //     long actorMatch = preference.getActors().stream()
+    //             .filter(a -> movie.getActorIds().contains(a.getActorId())) // movie에 배우 리스트 필요
+    //             .count();
 
-        userPreferenceRepository.save(preference);
+    //     score = (genreMatch * 0.6) + (actorMatch * 0.4);
+    //     return Math.min(score, 100); // 0~100% 점수
+    // }
+
+    // @Data
+    // @AllArgsConstructor
+    // public static class MovieWithScore {
+    //     private MovieInfo movie;
+    //     private double score;
+    // }
+
+    @Transactional(readOnly = true)
+    public double calculateMatchingScore(String email, Long movieId) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다. email=" + email));
+
+        UserPreference preference = userPreferenceRepository.findTopByUserOrderByCreatedAtDesc(user)
+                .orElse(null);
+        if (preference == null) return 0.0;
+
+        MovieInfo movie = movieInfoRepository.findByMovieId(movieId)
+                .orElseThrow(() -> new IllegalArgumentException("영화 정보를 찾을 수 없습니다. movieId=" + movieId));
+
+        // 장르 점수
+        long matchGenreCount = preference.getGenres().stream()
+                .filter(g -> movie.getGenres().stream()
+                        .anyMatch(mg -> mg.getGenreId().equals(g.getGenreId())))
+                .count();
+
+        double genreScore = preference.getGenres().isEmpty()
+                ? 0.0
+                : (matchGenreCount * 100.0 / preference.getGenres().size());
+
+        // 배우 점수
+        long matchActorCount = preference.getActors().stream()
+                .filter(a -> movie.getActors().stream()
+                        .anyMatch(ma -> ma.getActorId().equals(a.getActorId())))
+                .count();
+
+        double actorScore = preference.getActors().isEmpty()
+                ? 0.0
+                : (matchActorCount * 100.0 / preference.getActors().size());
+
+        // 가중치 적용 (장르 60%, 배우 40%)
+        double finalScore = (genreScore * 0.6) + (actorScore * 0.4);
+
+        return Math.round(finalScore * 10.0) / 10.0;
     }
 }
-
 
