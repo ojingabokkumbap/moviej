@@ -19,6 +19,6 @@ public class UserPreferenceController {
             @RequestBody PreferenceRequestDto dto) {
 
         recommendationService.saveUserPreference(userId, dto);
-        return ResponseEntity.ok("Preferences saved successfully");
+        return ResponseEntity.ok("온보딩 개인 선호도 저장 완료");
     }
 }
