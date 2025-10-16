@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MovieInfoRepository extends JpaRepository<MovieInfo, Long> {
 
-    Optional<MovieInfo> findByMovieId(Long movieId);
+    // Optional<MovieInfo> findByTmdbId(Long tmdbId); // tmdbId로 조회가 필요하다면 주석 해제
    
 }

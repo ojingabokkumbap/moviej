@@ -47,9 +47,9 @@ public class UserPreferenceService {
 
         List<MovieInfo> movies = dto.getMovies().stream()
                 .map(m -> MovieInfo.builder()
-                        .movieId(m.getId())
                         .title(m.getTitle())
                         .rating(m.getRating()) // 프론트에서 보낸 별점 포함
+                        // 온보딩 선호 영화만 저장, TMDB 데이터는 저장하지 않음
                         .build())
                 .collect(Collectors.toList());
 

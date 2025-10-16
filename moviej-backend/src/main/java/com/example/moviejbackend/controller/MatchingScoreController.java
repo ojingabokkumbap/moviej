@@ -13,12 +13,13 @@ public class MatchingScoreController {
 
     private final RecommendationService recommendationService;
 
-    @GetMapping("/{movieId}/matching")
+
+    @PostMapping("/matching-score")
     public ResponseEntity<?> getMatchingScore(
-            @PathVariable Long movieId,
-            @RequestParam String email
+            @RequestParam String email,
+            @RequestBody com.example.moviejbackend.dto.request.TMDBMovieDto tmdbMovieDto
     ) {
-        double score = recommendationService.calculateMatchingScore(email, movieId);
+        double score = recommendationService.calculateMatchingScore(email, tmdbMovieDto);
         return ResponseEntity.ok().body(new ScoreResponse(score));
     }
 
