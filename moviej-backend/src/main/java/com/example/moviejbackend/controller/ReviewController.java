@@ -71,8 +71,14 @@ public class ReviewController {
     // 리뷰 작성
     @PostMapping
     public ResponseEntity<Review> createReview(@RequestBody ReviewRequestDto request) {
-        Review review = reviewService.createReview(request.getEmail(), request.getTmdbMovieId(), request.getMovieTitle(),
-                                                request.getTitle(), request.getRating(), request.getContent());
+        Review review = reviewService.createReview(
+            request.getEmail(),
+            request.getTmdbMovieId(),
+            request.getMovieTitle(),
+            request.getTitle(),
+            request.getRating(),
+            request.getContent()
+        );
         return ResponseEntity.ok(review);
     }
 

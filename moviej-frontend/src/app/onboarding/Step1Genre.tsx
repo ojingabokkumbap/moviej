@@ -2,18 +2,18 @@
 import { useState } from "react";
 
 const genres = [
-  { id: "action", name: "액션" },
-  { id: "comedy", name: "코미디" },
-  { id: "drama", name: "드라마" },
-  { id: "romance", name: "로맨스" },
-  { id: "horror", name: "공포" },
-  { id: "scifi", name: "SF" },
-  { id: "thriller", name: "스릴러" },
-  { id: "animation", name: "애니메이션" },
-  { id: "documentary", name: "다큐멘터리" },
-  { id: "musical", name: "뮤지컬" },
-  { id: "fantasy", name: "판타지" },
-  { id: "crime", name: "범죄" },
+  { id: "action", tmdbId: 28, name: "액션", englishName: "Action" },
+  { id: "comedy", tmdbId: 35, name: "코미디", englishName: "Comedy" },
+  { id: "drama", tmdbId: 18, name: "드라마", englishName: "Drama" },
+  { id: "romance", tmdbId: 10749, name: "로맨스", englishName: "Romance" },
+  { id: "horror", tmdbId: 27, name: "공포", englishName: "Horror" },
+  { id: "scifi", tmdbId: 878, name: "SF", englishName: "Science Fiction" },
+  { id: "thriller", tmdbId: 53, name: "스릴러", englishName: "Thriller" },
+  { id: "animation", tmdbId: 16, name: "애니메이션", englishName: "Animation" },
+  { id: "documentary", tmdbId: 99, name: "다큐멘터리", englishName: "Documentary" },
+  { id: "musical", tmdbId: 10402, name: "뮤지컬", englishName: "Music" },
+  { id: "fantasy", tmdbId: 14, name: "판타지", englishName: "Fantasy" },
+  { id: "crime", tmdbId: 80, name: "범죄", englishName: "Crime" },
 ];
 
 interface Step1GenreProps {
@@ -36,7 +36,13 @@ export default function Step1Genre({
       ? selectedGenres.filter((g) => g !== genreId)
       : [...selectedGenres, genreId];
     setSelectedGenres(updated);
-    onDataUpdate({ genres: updated });
+    
+    // 장르 객체 전체를 전달
+    const selectedGenreObjects = updated.map(id => 
+      genres.find(g => g.id === id)
+    ).filter(Boolean);
+    
+    onDataUpdate({ genres: selectedGenreObjects });
   };
 
   const canProceed = selectedGenres.length >= 3;

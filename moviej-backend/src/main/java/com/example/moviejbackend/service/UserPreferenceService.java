@@ -75,4 +75,5 @@ public class UserPreferenceService {
         return userPreferenceRepository.findTopByUserOrderByCreatedAtDesc(user)
                 .orElse(null);
     }
+
 }

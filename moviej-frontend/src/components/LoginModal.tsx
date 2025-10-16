@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { useNotification } from "@/contexts/NotificationContext";
+import { useRouter } from "next/navigation";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export default function LoginModal({
 }: LoginModalProps) {
   const { showNotification } = useNotification();
   const [email, setEmail] = useState("");
+  const router = useRouter();
   const [rememberEmail, setRememberEmail] = useState(false);
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"login" | "findId" | "findPassword">(
@@ -54,17 +56,57 @@ export default function LoginModal({
 
         const response = await api.post("/users/login", { email, password });
 
+        console.log("=== 로그인 응답 디버깅 ===");
+        console.log("응답 데이터:", response.data);
+        console.log("userId:", response.data.userId);
+
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("userEmail", response.data.email || email);
         localStorage.setItem("userNickname", response.data.nickname);
-        localStorage.setItem("userProfileImage", response.data.profileImage || "");
+        localStorage.setItem(
+          "userProfileImage",
+          response.data.profileImage || ""
+        );
+        localStorage.setItem("userId", response.data.userId?.toString() || "");
+
+        console.log("저장된 userId:", localStorage.getItem("userId"));
 
         window.dispatchEvent(new Event("storage"));
         showNotification("로그인되었습니다.", "success");
         onClose();
+
+        const userId = response.data.userId;
+        if (userId) {
+          try {
+            const prefRes = await api.get(
+              `/users/user-preferences/check?userId=${userId}`
+            );
+            // 200이면 홈으로
+            if (prefRes.status === 200) {
+              router.push("/home");
+            } else {
+              // 200이 아니면 온보딩으로
+              router.replace("/onboarding");
+            }
+          } catch (err: any) {
+            // 404 또는 204면 온보딩, 그 외는 홈
+            if (
+              err?.response?.status === 404 ||
+              err?.response?.status === 204
+            ) {
+              router.replace("/onboarding");
+            } else {
+              router.push("/home");
+            }
+          }
+        }
+        
       } catch (error) {
         console.error("로그인 실패:", error);
-        showNotification("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.", "error");
+        showNotification(
+          "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.",
+          "error"
+        );
       }
     } else if (mode === "findId") {
       try {
