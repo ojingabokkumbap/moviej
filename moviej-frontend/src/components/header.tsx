@@ -179,7 +179,9 @@ export default function Header() {
       >
         <div className="flex items-center justify-between px-10 py-4 w-full h-26 bg-transparent">
           <div className="w-fit">
-            <Image src="/images/logo.svg" alt="Logo" width={85} height={50} />
+            <Link href="/">
+              <Image src="/images/logo.svg" alt="Logo" width={85} height={50} />
+            </Link>
           </div>
           <div className="flex items-center gap-10 w-7/12 justify-center">
             <Link href="/" className="text-white">

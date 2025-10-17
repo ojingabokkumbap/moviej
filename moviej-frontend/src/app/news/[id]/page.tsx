@@ -315,7 +315,7 @@ export default function NewsDetailPage() {
 
   if (!article) {
     return (
-      <main className="min-h-screen bg-gray-900 text-white pt-20">
+      <main className="min-h-screen  text-white pt-20">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl text-gray-400">뉴스를 찾을 수 없습니다</h1>
@@ -332,7 +332,7 @@ export default function NewsDetailPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-900 text-white pt-20">
+    <main className="min-h-screen  text-white pt-20">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* 뒤로가기 버튼 */}
         <button

@@ -175,7 +175,7 @@ export default function MovieNotePage() {
           username: userNickname || userEmail.split("@")[0],
           email: userEmail,
           profileImage:
-            localStorage.getItem("profileImage") ||
+            localStorage.getItem("userProfileImage") ||
             "/images/default-avatar.jpg",
           joinDate: new Date(localStorage.getItem("joinDate") || Date.now()),
           totalMoviesWatched: reviewData.length,
@@ -286,18 +286,29 @@ export default function MovieNotePage() {
         <div className="p-8 ">
           <div className="flex items-center gap-6 mb-6">
             <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-700">
-              <div className="w-full h-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
-                <span className="text-3xl font-bold text-white">
-                  {userProfile.username.charAt(0)}
-                </span>
-              </div>
+              {userProfile.profileImage ?
+               (
+                <Image
+                  src={userProfile.profileImage}
+                  alt="프로필 이미지"
+                  width={96}
+                  height={96}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
+                  <span className="text-3xl font-bold text-white">
+                    {userProfile.username.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold mb-2">
                 {userProfile.username}
               </h2>
               <div className="flex text-gray-400 flex-col">
-                <span>가입일: {userProfile.joinDate.toLocaleDateString()}</span>
+                <span>가입일 {userProfile.joinDate.toLocaleDateString()}</span>
                 <span>활동 {getActivityDays()}일째</span>
               </div>
             </div>
