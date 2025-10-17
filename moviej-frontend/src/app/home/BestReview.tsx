@@ -60,8 +60,7 @@ export default function BestReview() {
         );
         setPosters(posterMap);
         setMovieDetails(detailsMap);
-      } catch (err) {
-        console.error("리뷰 불러오기 실패:", err);
+      } catch {
         setReviews([]);
       } finally {
         setIsLoading(false);
@@ -115,8 +114,7 @@ export default function BestReview() {
           review.id === reviewId ? { ...review, ...updatedReview } : review
         )
       );
-    } catch (err) {
-      console.error("좋아요 처리 실패:", err);
+    } catch {
       showNotification("좋아요 처리에 실패했습니다.", "error");
     }
   };
@@ -131,7 +129,10 @@ export default function BestReview() {
               <div className="h-9 w-full bg-gray-700 animate-pulse rounded mt-1"></div>
               <div className="flex my-2 gap-0.5">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="w-4 h-4 bg-gray-700 animate-pulse rounded"></div>
+                  <div
+                    key={i}
+                    className="w-4 h-4 bg-gray-700 animate-pulse rounded"
+                  ></div>
                 ))}
               </div>
               <div className="space-y-2 mt-3">
@@ -196,7 +197,7 @@ export default function BestReview() {
                   ></path>
                 </svg>
                 <p className="text-base font-light">
-                  인기 리뷰를 불러오는 중입니다.
+                  리뷰를 불러오는 중입니다.
                 </p>
               </div>
             </div>
@@ -205,107 +206,117 @@ export default function BestReview() {
       ) : (
         <>
           {/* 기존 콘텐츠 */}
-      <div className="flex-col justify-start w-2/6 py-16 pr-10">
-        <div className="h-4/5">
-          <p className="text-violet-400 font-medium">{genreName}</p>
-          <p className="font-semibold text-4xl mt-1">{selectedReview?.movieTitle}</p>
-          <p className="flex my-2 gap-0.5 items-center">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <svg
-                key={i}
-                className={`w-4 h-4 ${
-                  i < (selectedReview?.rating ?? 0)
-                    ? "text-violet-400"
-                    : "text-gray-300"
-                }`}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.955L10 0l2.951 5.955 6.561.955-4.756 4.635 1.122 6.545z"></path>
-              </svg>
-            ))}
-          </p>
-          <p className="text-gray-300 mt-3 h-20 items-start flex w-5/6">
-            {selectedReview?.content}
-          </p>
-          <div className="flex items-center mb-1">
-            <div className="w-5 h-5 bg-gradient-to-br from-violet-600 to-pink-600 rounded-full flex items-center justify-center">
-              {selectedReview?.profileImage ? (
-                <img
-                  src={selectedReview.profileImage}
-                  alt="프로필 이미지"
-                  className="w-full h-full object-cover rounded-full"
-                />
-              ) : (
-                <span className="text-white font-medium rounded-full">
-                  {selectedReview?.nickname?.charAt(0).toUpperCase()}
+          <div className="flex-col justify-start w-2/6 py-16 pr-10">
+            <div className="h-4/5">
+              <p className="text-violet-400 font-medium">{genreName}</p>
+              <p className="font-semibold text-4xl mt-1">
+                {selectedReview?.movieTitle}
+              </p>
+              <p className="flex my-2 gap-0.5 items-center">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <svg
+                    key={i}
+                    className={`w-4 h-4 ${
+                      i < (selectedReview?.rating ?? 0)
+                        ? "text-violet-400"
+                        : "text-gray-300"
+                    }`}
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.955L10 0l2.951 5.955 6.561.955-4.756 4.635 1.122 6.545z"></path>
+                  </svg>
+                ))}
+              </p>
+              <p className="text-gray-300 mt-3 h-20 items-start flex w-5/6">
+                {selectedReview?.content}
+              </p>
+              <div className="flex items-center mb-1">
+                <div className="w-5 h-5 bg-gradient-to-br from-violet-600 to-pink-600 rounded-full flex items-center justify-center">
+                  {selectedReview?.profileImage ? (
+                    <img
+                      src={selectedReview.profileImage}
+                      alt="프로필 이미지"
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <span className="text-white font-medium rounded-full">
+                      {selectedReview?.nickname?.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <span className="text-gray-300 font-medium ml-2">
+                  {selectedReview?.nickname}
                 </span>
-              )}
-            </div>
-            <span className="text-gray-300 font-medium ml-2">
-              {selectedReview?.nickname}
-            </span>
-          </div>
-          <div className="text-gray-300 font-medium flex items-center gap-2">
-            {/* <span className="text-white font-normal mr-1">받은공감</span> */}
-            <svg
-              className="text-violet-300 w-5 h-5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              viewBox="0 0 24 24"
-              style={{
-                transition: "transform 0.2s, fill 0.2s",
-              }}
-            >
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
-            {selectedReview?.likes}
-          </div>
-        </div>
-        <div className="flex gap-4 w-full mt-4 items-center">
-          <div className="bg-violet-600  border-violet-600 text-center text-white px-4 py-2.5 w-1/3">
-            <Link href={`/movie/${selectedReview?.tmdbMovieId}`}>상세정보</Link>
-          </div>
-          <div className="border border-gray-300 px-4 py-2.5 w-1/3 text-center">
-            <button
-              onClick={() => handleLikeToggle(selectedReview.id)}
-              className=""
-            >
-              컬렉션 추가
-            </button>
-          </div>
-        </div>
-      </div>
-      <div className="w-full flex flex-col items-center justify-center relative">
-        <div className="flex gap-6 w-full justify-start items-center">
-          <div className="absolute -top-7 right-24 z-10">
-            <Link href="/reviews?page=0&size=3">
-              <button className="border border-gray-400 pl-5 pr-3 py-1.5 rounded-full text-sm flex items-center justify-center hover:bg-gray-800 transition-colors">
-                더보기
-                <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
-                  <polyline
-                    points="12,8 20,16 12,24"
-                    stroke="#ffffff"
-                    strokeWidth="2"
-                    fill="none"
-                    strokeLinecap="round"
-                  ></polyline>
+              </div>
+              <div className="text-gray-300 font-medium flex items-center gap-2">
+                {/* <span className="text-white font-normal mr-1">받은공감</span> */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M8 9h8" />
+                  <path d="M8 13h3.5" />
+                  <path d="M10.48 19.512l-2.48 1.488v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4" />
+                  <path d="M18 22l3.35 -3.284a2.143 2.143 0 0 0 .005 -3.071a2.242 2.242 0 0 0 -3.129 -.006l-.224 .22l-.223 -.22a2.242 2.242 0 0 0 -3.128 -.006a2.143 2.143 0 0 0 -.006 3.071l3.355 3.296z" />
                 </svg>
-              </button>
-            </Link>
+                {selectedReview?.likes}
+              </div>
+            </div>
+            <div className="flex gap-4 w-full mt-4 items-center">
+              <div className="bg-violet-600  border-violet-600 text-center text-white px-4 py-2.5 w-1/3">
+                <Link href={`/movie/${selectedReview?.tmdbMovieId}`}>
+                  상세정보
+                </Link>
+              </div>
+              <div className="border border-gray-300 px-4 py-2.5 w-1/3 text-center">
+                <button
+                  onClick={() => handleLikeToggle(selectedReview.id)}
+                  className=""
+                >
+                  컬렉션 추가
+                </button>
+              </div>
+            </div>
           </div>
-          {visibleIndexes.map((idx, i) => {
-            const review = reviews[idx];
-            return (
-              <img
-                key={review?.id || i}
-                src={
-                  review?.tmdbMovieId && posters[review.tmdbMovieId]
-                    ? posters[review.tmdbMovieId]
-                    : "/no-poster.png"
-                }
-                alt={review?.movieTitle || ""}
-                className={`object-cover shadow-lg cursor-pointer transition-all 
+          <div className="w-full flex flex-col items-center justify-center relative">
+            <div className="flex gap-6 w-full justify-start items-center">
+              <div className="absolute -top-7 right-24 z-10">
+                <Link href="/reviews?page=0&size=3">
+                  <button className="border border-gray-400 pl-5 pr-3 py-1.5 rounded-full text-sm flex items-center justify-center hover:bg-gray-800 transition-colors">
+                    더보기
+                    <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                      <polyline
+                        points="12,8 20,16 12,24"
+                        stroke="#ffffff"
+                        strokeWidth="2"
+                        fill="none"
+                        strokeLinecap="round"
+                      ></polyline>
+                    </svg>
+                  </button>
+                </Link>
+              </div>
+              {visibleIndexes.map((idx, i) => {
+                const review = reviews[idx];
+                return (
+                  <img
+                    key={review?.id || i}
+                    src={
+                      review?.tmdbMovieId && posters[review.tmdbMovieId]
+                        ? posters[review.tmdbMovieId]
+                        : "/no-poster.png"
+                    }
+                    alt={review?.movieTitle || ""}
+                    className={`object-cover shadow-lg cursor-pointer transition-all 
                   ${
                     selectedIdx === idx
                       ? "border-violet-600"
@@ -318,15 +329,15 @@ export default function BestReview() {
                   }
       rounded-lg
                 `}
-                onClick={() => {
-                  setStartIdx(idx);
-                  setSelectedIdx(idx);
-                }}
-              />
-            );
-          })}
-        </div>
-      </div>
+                    onClick={() => {
+                      setStartIdx(idx);
+                      setSelectedIdx(idx);
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
         </>
       )}
     </div>

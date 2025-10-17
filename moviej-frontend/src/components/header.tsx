@@ -24,7 +24,9 @@ export default function Header() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userNickname, setUserNickname] = useState<string | null>(null);
   const [userProfileImage, setUserProfileImage] = useState<string | null>(
-    typeof window !== "undefined" ? localStorage.getItem("userProfileImage") : null
+    typeof window !== "undefined"
+      ? localStorage.getItem("userProfileImage")
+      : null
   );
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -69,8 +71,7 @@ export default function Header() {
       );
       const data = await response.json();
       setSearchResults(data.results?.slice(0, 5) || []); // 최대 5개만 표시
-    } catch (error) {
-      console.error("영화 검색 오류:", error);
+    } catch {
       setSearchResults([]);
     } finally {
       setIsLoading(false);
@@ -190,9 +191,19 @@ export default function Header() {
             <Link href="/news" className="text-white">
               기사
             </Link>
-            <Link href="/profile" className="text-white">
+            <button
+              onClick={() => {
+                if (!isLoggedIn) {
+                  showNotification("로그인이 필요한 서비스입니다.", "warning");
+                  router.push("/");
+                } else {
+                  router.push("/profile");
+                }
+              }}
+              className="text-white"
+            >
               내 정보
-            </Link>
+            </button>
           </div>
           <div className="flex items-center gap-6 w-fit justify-end">
             <div>
@@ -344,26 +355,6 @@ export default function Header() {
                       </svg>
                       계정 설정
                     </button>
-                    <button
-                      onClick={() => handleProfileMenuClick("/watchlist")}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                    >
-                      <svg
-                        className="w-4 h-4 mr-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                        />
-                      </svg>
-                      관심 목록
-                    </button>
-
                     <div className="border-t border-gray-700 mt-2 pt-2">
                       <button
                         onClick={() => {

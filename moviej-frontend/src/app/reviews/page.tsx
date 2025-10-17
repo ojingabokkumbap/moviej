@@ -62,12 +62,6 @@ function ReviewsPage() {
     }
   }, [inView, hasMore, loading]);
 
-  useEffect(() => {
-    if (reviews.length > 0) {
-      console.log("리뷰 데이터:", reviews);
-    }
-  }, [reviews]);
-
   const fetchInitialData = async () => {
     setLoading(true);
     try {
@@ -104,8 +98,7 @@ function ReviewsPage() {
 
         await fetchPostersForReviews(reviewData);
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       setReviews([]);
       setHasMore(false);
     } finally {
@@ -149,8 +142,7 @@ function ReviewsPage() {
 
       setHasMore(newReviews.length >= 3);
       setPage(nextPage);
-    } catch (err) {
-      console.log(err);
+    } catch {
       setHasMore(false);
     } finally {
       setLoading(false);
@@ -196,8 +188,7 @@ function ReviewsPage() {
           review.id === reviewId ? { ...review, ...updatedReview } : review
         )
       );
-    } catch (err) {
-      console.error("좋아요 처리 실패:", err);
+    } catch {
       showNotification("좋아요 처리에 실패했습니다.", "error");
     }
   };
@@ -224,7 +215,7 @@ function ReviewsPage() {
         {/* 헤더 */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">
-            {movieId ? `${movieTitle} ` : "인기 감상평"}
+            {movieId ? `${movieTitle} ` : "감상평"}
           </h1>
         </div>
         {/* 정렬 옵션 */}

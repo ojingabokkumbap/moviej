@@ -39,16 +39,8 @@ export default function OnboardingPage() {
   const handleComplete = async () => {
     try {
       const userId = localStorage.getItem("userId");
-      console.log("=== 온보딩 완료 디버깅 ===");
-      console.log("localStorage userId:", userId);
-      console.log("formData:", formData);
       
       if (!userId) {
-        console.error("userId를 찾을 수 없습니다. localStorage 전체:", {
-          token: localStorage.getItem("token"),
-          userEmail: localStorage.getItem("userEmail"),
-          userNickname: localStorage.getItem("userNickname"),
-        });
         showNotification("사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.", "error");
         router.push("/");
         return;
@@ -90,17 +82,11 @@ export default function OnboardingPage() {
         })
       };
 
-      console.log("전송할 데이터:", requestData);
-      console.log("genres 상세:", JSON.stringify(requestData.genres, null, 2));
-      console.log("actors 상세:", JSON.stringify(requestData.actors, null, 2));
-      console.log("movies 상세:", JSON.stringify(requestData.movies, null, 2));
-
       // 백엔드로 온보딩 데이터 전송
       const response = await api.post(`/users/${userId}/preferences`, requestData);
 
-      console.log("응답:", response.data);
-
       if (response.status === 200 || response.status === 201) {
+        // 선호도 데이터를 로컬스토리지에도 저장 (프로필 페이지에서 사용)
         localStorage.setItem("userPreferences", JSON.stringify(requestData));
         
         showNotification("취향 분석이 완료되었습니다!", "success");
@@ -108,8 +94,6 @@ export default function OnboardingPage() {
         router.push("/home");
       }
     } catch (error: any) {
-      console.error("온보딩 완료 중 오류:", error);
-      console.error("에러 응답:", error?.response?.data);
       showNotification(
         error?.response?.data?.message || "설정 저장 중 오류가 발생했습니다.",
         "error"

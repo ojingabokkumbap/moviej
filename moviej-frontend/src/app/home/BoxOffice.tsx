@@ -297,7 +297,7 @@ export default function BoxOffice() {
                     onClick={() => handleDetailClick(actualIdx)}
                   >
                     <span
-                      className={`absolute text-8xl bottom-2 left-[-25px] italic font-bold text-gray-200 drop-shadow-lg ${
+                      className={`absolute text-8xl bottom-2 left-[-25px] italic font-bold text-gray-100 drop-shadow-lg ${
                         hoveredIdx !== null ? "opacity-0" : "opacity-100"
                       } transition-opacity duration-500`}
                       style={{
