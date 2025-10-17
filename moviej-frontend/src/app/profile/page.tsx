@@ -81,6 +81,11 @@ export default function MovieNotePage() {
   const [userPreferences, setUserPreferences] =
     useState<UserPreferences | null>(null);
 
+  // 페이지 타이틀 설정
+  useEffect(() => {
+    document.title = "내 정보 - MovieJ";
+  }, []);
+
   // 리뷰들의 포스터 가져오기
   const fetchPostersForReviews = async (reviewList: Review[]) => {
     const updatedReviews = await Promise.all(

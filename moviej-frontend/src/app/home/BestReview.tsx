@@ -39,7 +39,11 @@ export default function BestReview() {
         const res = await api.get("/reviews/popular");
         const sorted = [...res.data].sort((a, b) => b.likes - a.likes);
         setReviews(sorted);
+        
+        // 리뷰 데이터를 먼저 로드하고 스켈레톤 해제
+        setIsLoading(false);
 
+        // 포스터는 백그라운드에서 로드
         const posterMap: { [key: string]: string } = {};
         const detailsMap: { [key: string]: any } = {};
         await Promise.all(
@@ -62,7 +66,6 @@ export default function BestReview() {
         setMovieDetails(detailsMap);
       } catch {
         setReviews([]);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -121,7 +124,7 @@ export default function BestReview() {
 
   return (
     <div className="flex w-full h-[430px]">
-      {isLoading ? (
+      {isLoading || reviews.length === 0 ? (
         <>
           <div className="flex-col justify-start w-2/6 py-16 pr-10">
             <div className="h-4/5">

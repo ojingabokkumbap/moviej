@@ -308,6 +308,8 @@ export default function NewsDetailPage() {
     const foundArticle = mockNews.find((news) => news.id === id);
     if (foundArticle) {
       setArticle(foundArticle);
+      // 기사 제목으로 페이지 타이틀 설정
+      document.title = `${foundArticle.title} - MovieJ`;
     }
   }, [params.id]);
 

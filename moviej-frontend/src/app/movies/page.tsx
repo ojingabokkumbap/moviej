@@ -177,6 +177,11 @@ export default function MoviesPage() {
     [key: number]: boolean;
   }>({});
 
+  // 페이지 타이틀 설정
+  useEffect(() => {
+    document.title = "영화 - MovieJ";
+  }, []);
+
   // 그리드용 영화 데이터 fetch 함수
   const fetchGridMovies = async (genre: string, page: number) => {
     try {

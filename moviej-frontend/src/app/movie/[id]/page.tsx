@@ -139,6 +139,9 @@ export default function MovieDetailPage() {
           posters: imagesData.posters.slice(0, 10),
         });
 
+        // 영화 제목으로 페이지 타이틀 설정
+        document.title = `${movieData.title} - MovieJ`;
+
         // 내 백엔드 리뷰만 호출
         try {
           const userEmail = localStorage.getItem("userEmail");

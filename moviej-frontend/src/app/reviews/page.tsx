@@ -41,6 +41,15 @@ function ReviewsPage() {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
 
+  // 페이지 타이틀 설정
+  useEffect(() => {
+    if (movieTitle) {
+      document.title = `${movieTitle} 리뷰 - MovieJ`;
+    } else {
+      document.title = "리뷰 - MovieJ";
+    }
+  }, [movieTitle]);
+
   // Intersection Observer로 무한 스크롤 감지
   const { ref, inView } = useInView({
     threshold: 0,

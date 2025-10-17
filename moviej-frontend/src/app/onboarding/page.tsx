@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useNotification } from "@/contexts/NotificationContext";
@@ -18,6 +18,11 @@ export default function OnboardingPage() {
     movies: [],
     movieRatings: {}
   });
+
+  // 페이지 타이틀 설정
+  useEffect(() => {
+    document.title = "취향 분석 - MovieJ";
+  }, []);
 
   const handleNext = () => {
     if (currentStep < 3) {

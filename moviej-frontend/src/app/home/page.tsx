@@ -18,6 +18,11 @@ export default function Home() {
   const [startIdx, setStartIdx] = useState(0);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(0);
   const [isMounted, setIsMounted] = useState(false);
+
+  // 페이지 타이틀 설정
+  useEffect(() => {
+    document.title = "홈 - MovieJ";
+  }, []);
   const [progress, setProgress] = useState(0); // 타이머 진행률 추가
   const visibleMovies = movies.slice(startIdx, startIdx + 4);
   

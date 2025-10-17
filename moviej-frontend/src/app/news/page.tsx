@@ -179,6 +179,11 @@ export default function NewsPage() {
     setDisplayCount(6);
   }, [selectedCategory]);
 
+  // 페이지 타이틀 설정
+  useEffect(() => {
+    document.title = "기사 - MovieJ";
+  }, []);
+
   return (
     <main className="min-h-scree text-white pt-20">
       <div className="max-w-7xl mx-auto px-4 py-8">
