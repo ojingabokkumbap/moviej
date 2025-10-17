@@ -8,15 +8,22 @@ import UpcomingMovies from "./UpcomingMovies";
 import TasteMovies from "./TasteMovies";
 import BestReview from "./BestReview";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNotification } from "@/contexts/NotificationContext";
+import { checkWishlist, toggleWishlist } from "@/lib/wishlistAPI";
 
 export default function Home() {
   const router = useRouter();
+  const { showNotification } = useNotification();
   const { movies, logos, genreMap } = useMoviesTMDB();
   const [startIdx, setStartIdx] = useState(0);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(0);
   const [isMounted, setIsMounted] = useState(false);
   const [progress, setProgress] = useState(0); // 타이머 진행률 추가
   const visibleMovies = movies.slice(startIdx, startIdx + 4);
+  
+  // 찜하기 상태
+  const [wishlistStatus, setWishlistStatus] = useState<{ [key: number]: boolean }>({});
+  const [wishlistLoading, setWishlistLoading] = useState<{ [key: number]: boolean }>({});
 
   // 출연진 정보 가져오기
   const [credits, setCredits] = useState<{ directors: any[]; cast: any[] }>({
@@ -69,6 +76,37 @@ export default function Home() {
     getCredits();
   }, [movies, startIdx, selectedIdx]);
 
+  // 찜 상태 확인 (이미 확인한 영화는 제외)
+  useEffect(() => {
+    const userEmail = localStorage.getItem("userEmail");
+    if (userEmail && visibleMovies.length > 0) {
+      // 아직 확인하지 않은 영화만 필터링
+      const moviesToCheck = visibleMovies.filter(
+        (movie) => !(movie.id in wishlistStatus)
+      );
+
+      if (moviesToCheck.length === 0) return; // 모두 확인했으면 스킵
+
+      Promise.all(
+        moviesToCheck.map(async (movie) => {
+          try {
+            const isWishlisted = await checkWishlist(userEmail, movie.id);
+            return { id: movie.id, isWishlisted };
+          } catch {
+            return { id: movie.id, isWishlisted: false };
+          }
+        })
+      ).then((results) => {
+        const newWishlistStatus: { [key: number]: boolean } = {};
+        results.forEach(({ id, isWishlisted }) => {
+          newWishlistStatus[id] = isWishlisted;
+        });
+        setWishlistStatus((prev) => ({ ...prev, ...newWishlistStatus }));
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleMovies]);
+
   // Hydration 방지 및 클라이언트 사이드 초기화
   useEffect(() => {
     setIsMounted(true);
@@ -102,6 +140,41 @@ export default function Home() {
     const currentMovie = visibleMovies[selectedIdx ?? 0];
     if (currentMovie) {
       router.push(`/movie/${currentMovie.id}`);
+    }
+  };
+
+  // 컬렉션 추가/제거 핸들러
+  const handleWishlistToggle = async () => {
+    const userEmail = localStorage.getItem("userEmail");
+    
+    if (!userEmail) {
+      showNotification("로그인이 필요합니다.", "warning");
+      return;
+    }
+
+    const currentMovie = visibleMovies[selectedIdx ?? 0];
+    if (!currentMovie) return;
+
+    setWishlistLoading((prev) => ({ ...prev, [currentMovie.id]: true }));
+    try {
+      await toggleWishlist(userEmail, {
+        movieId: currentMovie.id,
+        title: currentMovie.title,
+        posterPath: currentMovie.poster_path,
+      });
+
+      const isNowInWishlist = !wishlistStatus[currentMovie.id];
+      setWishlistStatus((prev) => ({ ...prev, [currentMovie.id]: isNowInWishlist }));
+      
+      showNotification(
+        isNowInWishlist ? "컬렉션에 추가되었습니다." : "컬렉션에서 제거되었습니다.",
+        "success"
+      );
+    } catch (err) {
+      console.error("찜하기 처리 실패:", err);
+      showNotification("컬렉션 처리에 실패했습니다.", "error");
+    } finally {
+      setWishlistLoading((prev) => ({ ...prev, [currentMovie.id]: false }));
     }
   };
 
@@ -221,8 +294,14 @@ export default function Home() {
                     ))}
                 </div>
                 <div className="flex items-center gap-4 mb-8">
-                  <button className="px-6 py-3 bg-violet-600 text-white shadow transition w-32">
-                    리스트 추가
+                  <button
+                    onClick={handleWishlistToggle}
+                    disabled={wishlistLoading[visibleMovies[selectedIdx ?? 0]?.id]}
+                    className="px-6 py-3 bg-violet-600 text-white shadow transition w-32 disabled:opacity-50"
+                  >
+                    {wishlistStatus[visibleMovies[selectedIdx ?? 0]?.id]
+                      ? "컬렉션 제거"
+                      : "컬렉션 추가"}
                   </button>
                   <button
                     onClick={handleDetailClick}

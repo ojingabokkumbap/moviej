@@ -23,6 +23,7 @@ export default function BestReview() {
   const [posters, setPosters] = useState<{ [key: string]: string }>({});
   const [startIdx, setStartIdx] = useState(0);
   const [selectedIdx, setSelectedIdx] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   const { showNotification } = useNotification();
   // 영화 상세 정보 캐싱
@@ -34,6 +35,7 @@ export default function BestReview() {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
+        setIsLoading(true);
         const res = await api.get("/reviews/popular");
         const sorted = [...res.data].sort((a, b) => b.likes - a.likes);
         setReviews(sorted);
@@ -61,6 +63,8 @@ export default function BestReview() {
       } catch (err) {
         console.error("리뷰 불러오기 실패:", err);
         setReviews([]);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchReviews();
@@ -119,6 +123,88 @@ export default function BestReview() {
 
   return (
     <div className="flex w-full h-[430px]">
+      {isLoading ? (
+        <>
+          <div className="flex-col justify-start w-2/6 py-16 pr-10">
+            <div className="h-4/5">
+              <div className="h-5 w-20 bg-gray-700 animate-pulse rounded"></div>
+              <div className="h-9 w-full bg-gray-700 animate-pulse rounded mt-1"></div>
+              <div className="flex my-2 gap-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="w-4 h-4 bg-gray-700 animate-pulse rounded"></div>
+                ))}
+              </div>
+              <div className="space-y-2 mt-3">
+                <div className="h-4 w-full bg-gray-700 animate-pulse rounded"></div>
+                <div className="h-4 w-5/6 bg-gray-700 animate-pulse rounded"></div>
+                <div className="h-4 w-4/6 bg-gray-700 animate-pulse rounded"></div>
+              </div>
+              <div className="flex items-center mt-3">
+                <div className="w-5 h-5 bg-gray-700 animate-pulse rounded-full"></div>
+                <div className="h-4 w-20 bg-gray-700 animate-pulse rounded ml-2"></div>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="w-5 h-5 bg-gray-700 animate-pulse rounded"></div>
+                <div className="h-4 w-10 bg-gray-700 animate-pulse rounded"></div>
+              </div>
+            </div>
+            <div className="flex gap-4 w-full mt-4">
+              <div className="h-11 w-1/3 bg-gray-700 animate-pulse rounded"></div>
+              <div className="h-11 w-1/3 bg-gray-700 animate-pulse rounded"></div>
+            </div>
+          </div>
+
+          {/* 스켈레톤 로딩 - 오른쪽 캐러셀 */}
+          <div className="w-full flex flex-col items-center justify-center relative">
+            <div className="flex gap-6 w-full justify-start items-center">
+              <div className="absolute -top-7 right-24 z-10">
+                <div className="h-9 w-24 bg-gray-700 animate-pulse rounded-full"></div>
+              </div>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className={`bg-gray-700 animate-pulse shadow-lg rounded-lg
+                    ${
+                      i === 0
+                        ? "h-[20vw] w-[14vw] max-h-[420px] max-w-[320px] min-h-[300px] min-w-[200px]"
+                        : "h-[17vw] w-[12.4vw] max-h-[420px] max-w-[320px] min-h-[300px] min-w-[200px]"
+                    }
+                  `}
+                ></div>
+              ))}
+            </div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+              <div className="flex items-center gap-2 text-gray-400">
+                <svg
+                  className="animate-spin h-5 w-5 text-violet-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <p className="text-base font-light">
+                  인기 리뷰를 불러오는 중입니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* 기존 콘텐츠 */}
       <div className="flex-col justify-start w-2/6 py-16 pr-10">
         <div className="h-4/5">
           <p className="text-violet-400 font-medium">{genreName}</p>
@@ -185,7 +271,7 @@ export default function BestReview() {
               onClick={() => handleLikeToggle(selectedReview.id)}
               className=""
             >
-              리스트 추가
+              컬렉션 추가
             </button>
           </div>
         </div>
@@ -241,6 +327,8 @@ export default function BestReview() {
           })}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

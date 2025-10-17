@@ -33,22 +33,23 @@ public class UserPreferenceService {
         // 2. DTO → 엔티티 변환
         List<GenreInfo> genres = dto.getGenres().stream()
                 .map(g -> GenreInfo.builder()
-                        .genreId(g.getId())
+                        .genreId(g.getGenreId())  // ✅ 실제 genreId 사용
                         .genreName(g.getName())
                         .build())
                 .collect(Collectors.toList());
 
         List<ActorInfo> actors = dto.getActors().stream()
                 .map(a -> ActorInfo.builder()
-                        .actorId(a.getId())
+                        .actorId(a.getActorId())  // ✅ 실제 actorId 사용
                         .actorName(a.getName())
                         .build())
                 .collect(Collectors.toList());
 
-        List<MovieInfo> movies = dto.getMovies().stream()
-                .map(m -> MovieInfo.builder()
+        List<com.example.moviejbackend.domain.MovieInfo> movies = dto.getMovies().stream()
+                .map(m -> com.example.moviejbackend.domain.MovieInfo.builder()
+                        .tmdbId(m.getTmdbId())
                         .title(m.getTitle())
-                        .rating(m.getRating()) // 프론트에서 보낸 별점 포함
+                        .rating(m.getRating())
                         // 온보딩 선호 영화만 저장, TMDB 데이터는 저장하지 않음
                         .build())
                 .collect(Collectors.toList());

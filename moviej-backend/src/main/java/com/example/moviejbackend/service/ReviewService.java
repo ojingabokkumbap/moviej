@@ -235,4 +235,29 @@ public class ReviewService {
             isLiked
         );
     }
+
+    // 자신이 쓴 리뷰만 조회 (최적화: User ID로 직접 조회)
+    public List<ReviewResponseDto> getReviewsByUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        
+        // User ID로 직접 조회 (전체 리뷰를 가져와서 필터링하지 않음)
+        List<Review> reviews = reviewRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        
+        return reviews.stream()
+            .map(review -> new ReviewResponseDto(
+                review.getId(),
+                review.getTmdbMovieId(),
+                review.getMovieTitle(),
+                review.getTitle(),
+                review.getNickname(),
+                review.getProfileImage(),
+                review.getRating(),
+                review.getContent(),
+                review.getLikes(),
+                review.getCreatedAt(),
+                true  // 자신이 쓴 리뷰이므로 항상 true (좋아요는 자신의 리뷰에 할 수 없다면 false)
+            ))
+            .collect(Collectors.toList());
+    }
 }

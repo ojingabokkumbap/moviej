@@ -15,6 +15,7 @@ import {
 } from "@/lib/tmdbAPI";
 import { api } from "@/lib/api";
 import { useNotification } from "@/contexts/NotificationContext";
+import { checkWishlist, toggleWishlist } from "@/lib/wishlistAPI";
 
 interface MovieDetail {
   id: number;
@@ -84,6 +85,7 @@ interface MovieReview {
 }
 
 export default function MovieDetailPage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { showNotification } = useNotification();
   const params = useParams();
   const router = useRouter();
@@ -98,6 +100,7 @@ export default function MovieDetailPage() {
     posters: MovieImage[];
   }>({ backdrops: [], posters: [] });
   const [reviews, setReviews] = useState<MovieReview[]>([]);
+  const [matchingScore, setMatchingScore] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAllCast, setShowAllCast] = useState(false);
@@ -107,8 +110,12 @@ export default function MovieDetailPage() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [modalRating, setModalRating] = useState(0);
   const [modalReview, setModalReview] = useState("");
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem("userEmail"));
+
     async function fetchData() {
       if (!movieId) return;
 
@@ -146,6 +153,53 @@ export default function MovieDetailPage() {
           console.log(reviewErr);
           setReviews([]); // 실패해도 상세페이지는 정상 노출
         }
+
+        // 취향 점수 조회
+        try {
+          const userEmail = localStorage.getItem("userEmail");
+          if (userEmail && movieData) {
+            const matchingResponse = await api.post(
+              "/users/matching-score",
+              {
+                tmdbId: parseInt(movieId),
+                title: movieData.title,
+                overview: movieData.overview || "",
+                posterPath: movieData.poster_path || "",
+                releaseDate: movieData.release_date || "",
+                rating: movieData.vote_average || 0,
+                genres: movieData.genres.map((g) => ({
+                  id: 0,
+                  genreId: g.id,
+                  genreName: g.name,
+                })),
+                actors: creditsData.cast.slice(0, 10).map((a) => ({
+                  id: 0,
+                  actorId: a.id,
+                  actorName: a.name,
+                })),
+              },
+              {
+                params: { email: userEmail },
+              }
+            );
+            setMatchingScore(matchingResponse.data.score || 0);
+          }
+        } catch (matchingErr) {
+          console.log("취향 점수 조회 실패:", matchingErr);
+          setMatchingScore(null);
+        }
+
+        // 찜 여부 확인
+        try {
+          const userEmail = localStorage.getItem("userEmail");
+          if (userEmail && movieId) {
+            const isWishlisted = await checkWishlist(userEmail, parseInt(movieId));
+            setIsInWishlist(isWishlisted);
+          }
+        } catch (wishlistErr) {
+          console.log("찜 여부 조회 실패:", wishlistErr);
+          setIsInWishlist(false);
+        }
       } catch (err) {
         setError("영화 정보를 불러오는데 실패했습니다.");
         console.error("Error fetching movie details:", err);
@@ -156,6 +210,37 @@ export default function MovieDetailPage() {
 
     fetchData();
   }, [movieId]);
+
+  const handleWishlistToggle = async () => {
+    const userEmail = localStorage.getItem("userEmail");
+    
+    if (!userEmail) {
+      showNotification("로그인이 필요합니다.", "warning");
+      return;
+    }
+
+    if (!movie) return;
+
+    setWishlistLoading(true);
+    try {
+      await toggleWishlist(userEmail, {
+        movieId: parseInt(movieId),
+        title: movie.title,
+        posterPath: movie.poster_path,
+      });
+
+      setIsInWishlist(!isInWishlist);
+      showNotification(
+        isInWishlist ? "컬렉션에서 제거되었습니다." : "컬렉션에 추가되었습니다.",
+        "success"
+      );
+    } catch (err) {
+      console.error("찜하기 처리 실패:", err);
+      showNotification("컬렉션 처리에 실패했습니다.", "error");
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
 
   const handleModalSubmit = async () => {
     const userEmail = localStorage.getItem("userEmail");
@@ -177,13 +262,12 @@ export default function MovieDetailPage() {
         setModalReview("");
 
         const reviewsRes = await api.get(`/reviews/movie/${movieId}`, {
-          params: { email: userEmail }
+          params: { email: userEmail },
         });
         setReviews(reviewsRes.data);
-        
       } catch (err) {
         const errorMsg =
-        (err as any)?.response?.data?.message || "리뷰 등록에 실패했습니다.";
+          (err as any)?.response?.data?.message || "리뷰 등록에 실패했습니다.";
         showNotification(errorMsg, "error");
       }
     }
@@ -281,12 +365,16 @@ export default function MovieDetailPage() {
                     </div>
                     <button
                       onClick={() => setShowRatingModal(true)}
-                      className="px-8 py-2 bg-violet-900 hover:bg-violet-700 transition-colors"
+                      className="px-8 py-2 bg-violet-800 hover:bg-violet-800 transition-colors"
                     >
                       평가하기
                     </button>
-                    <button className="px-8 py-2 border border-gray-300 hover:bg-gray-50 hover:text-black transition-colors">
-                      리스트 추가
+                    <button
+                      onClick={handleWishlistToggle}
+                      disabled={wishlistLoading}
+                      className="px-8 py-2 border border-gray-300 hover:bg-gray-50 hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {wishlistLoading ? "처리중" : isInWishlist ? "컬렉션 제거" : "컬렉션 추가"}
                     </button>
                   </div>
                   {/* 영화 정보 */}
@@ -482,11 +570,20 @@ export default function MovieDetailPage() {
                             </Tooltip>
                           </div>
                           <div className="mt-14">
-                            <CirclePercentChart
-                              percent={75}
-                              color="#864AF9"
-                              size={130}
-                            />
+                            {isLoggedIn ? (
+                              <CirclePercentChart
+                                percent={matchingScore ?? 0}
+                                color="#864AF9"
+                                size={130}
+                              />
+                            ) : (
+                              <CirclePercentChart
+                                color="#864AF9"
+                                percent={70}
+                                size={130}
+                                label="?"
+                              />
+                            )}
                           </div>
                         </div>
                       </div>
@@ -795,7 +892,7 @@ export default function MovieDetailPage() {
                           </div>
                         ))
                       ) : (
-                        <p className="text-gray-400 text-center py-8">
+                        <p className="text-gray-400 flex w-full text-center justify-center py-8">
                           아직 리뷰가 없습니다. 첫 번째 리뷰를 남겨보세요!
                         </p>
                       )}

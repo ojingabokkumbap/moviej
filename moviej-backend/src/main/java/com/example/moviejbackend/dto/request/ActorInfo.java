@@ -7,5 +7,6 @@ import lombok.Setter;
 @Setter
 public class ActorInfo {
     private Long id;
-    private String name;
+    private Long actorId;
+    private String actorName;
 }

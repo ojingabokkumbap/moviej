@@ -17,4 +17,5 @@ public class TMDBMovieDto {
     private Double rating;
     private List<GenreInfo> genres;
     private List<ActorInfo> actors;
+    private Double matchingScore;  // 매칭 점수
 }

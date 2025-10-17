@@ -242,7 +242,7 @@ export async function fetchTMDBInfoByTitle(title: string, releaseYear?: string) 
     movie = await searchTMDBMovieByTitle(title);
   }
   
-  if (!movie) return { overview: null, genres: [], vote_average: null };
+  if (!movie) return { id: null, overview: null, genres: [], vote_average: null, title: null, poster_path: null, release_date: null, genre_ids: [] };
 
   // 장르 ID → 장르명 변환
   const genreRes = await fetch(
@@ -257,8 +257,13 @@ export async function fetchTMDBInfoByTitle(title: string, releaseYear?: string) 
   const genres = movie.genre_ids?.map((id: number) => genreMap[id]) || [];
   const countries = movie.production_countries?.map((c: any) => c.name) || [];
   return {
+    id: movie.id,
+    title: movie.title,
     overview: movie.overview || null,
+    poster_path: movie.poster_path || null,
+    release_date: movie.release_date || null,
     genres,
+    genre_ids: movie.genre_ids || [],
     vote_average: movie.vote_average || null,
     countries,
   };

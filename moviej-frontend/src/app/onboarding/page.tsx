@@ -56,12 +56,10 @@ export default function OnboardingPage() {
 
       // 백엔드 API 형식에 맞게 데이터 변환
       const requestData = {
-        genres: formData.genres.map((genre: any) => {
-          return {
-            genreId: genre.tmdbId || null,
-            name: genre.englishName || null
-          };
-        }),
+        genres: formData.genres.map((genre: any) => ({
+          genreId: genre.tmdbId || null,
+          genreName: genre.name || null
+        })),
         actors: formData.actors.map((actor: any) => {
           // TMDB ID가 숫자인 경우 그대로 사용, 아니면 null
           let actorId = null;
@@ -72,8 +70,8 @@ export default function OnboardingPage() {
             actorId = isNaN(parsed) ? null : parsed;
           }
           return {
-            id: actorId,
-            name: actor.name || null
+            actorId: actorId,
+            actorName: actor.name || null
           };
         }),
         movies: formData.movies.map((movie: any) => {
@@ -86,9 +84,8 @@ export default function OnboardingPage() {
             movieId = isNaN(parsed) ? null : parsed;
           }
           return {
-            id: movieId,
-            title: movie.title || null,
-            rating: parseFloat(formData.movieRatings[movie.id]) || null
+            tmdbId: movieId,
+            title: movie.title || null
           };
         })
       };
@@ -104,6 +101,8 @@ export default function OnboardingPage() {
       console.log("응답:", response.data);
 
       if (response.status === 200 || response.status === 201) {
+        localStorage.setItem("userPreferences", JSON.stringify(requestData));
+        
         showNotification("취향 분석이 완료되었습니다!", "success");
         // 홈으로 이동
         router.push("/home");

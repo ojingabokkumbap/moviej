@@ -23,4 +23,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     
     // 좋아요순 정렬
     List<Review> findAllByOrderByLikesDescCreatedAtDesc();  // 좋아요 많은순 → 같으면 최신순
+    
+    // 특정 사용자가 작성한 리뷰 조회 (User ID 기반)
+    List<Review> findByUserIdOrderByCreatedAtDesc(Long userId);
 }

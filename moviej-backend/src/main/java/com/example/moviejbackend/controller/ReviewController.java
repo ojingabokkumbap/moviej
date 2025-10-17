@@ -88,4 +88,11 @@ public class ReviewController {
         ReviewResponseDto updatedReview = reviewService.toggleLikeReview(reviewId, email);
         return ResponseEntity.ok(updatedReview);  // 최신 isLiked, likes 포함된 DTO 반환
     }
+
+    // 자신이 쓴 리뷰만 조회
+    @GetMapping("/my")
+    public ResponseEntity<List<ReviewResponseDto>> getMyReviews(@RequestParam("email") String email) {
+        List<ReviewResponseDto> reviews = reviewService.getReviewsByUser(email);
+        return ResponseEntity.ok(reviews);
+    }
 }

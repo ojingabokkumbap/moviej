@@ -8,6 +8,7 @@ import {
 
 import { motion, AnimatePresence } from "framer-motion";
 import CirclePercentChart from "./CirclePercentChart";
+import { api } from "@/lib/api";
 
 export default function BoxOffice() {
   const { boxOffice, movieDetails } = useMoviesKOFIC();
@@ -22,8 +23,19 @@ export default function BoxOffice() {
       genres: string[];
     }[]
   >([]);
+  const [matchingScores, setMatchingScores] = useState<{
+    [key: number]: number;
+  }>({});
+  const [loadingScores, setLoadingScores] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const PRELOAD_COUNT = 5; // 초기 로딩 시 미리 가져올 영화 개수
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem("userEmail"));
+
     async function fetchPostersAndInfos() {
       if (!boxOffice || boxOffice.length === 0) {
         setPosters([]);
@@ -53,9 +65,106 @@ export default function BoxOffice() {
         })
       );
       setTmdbInfos(infoResults);
+
+      // 취향 점수 조회 - 앞 5개만 미리 로드
+      const userEmail = localStorage.getItem("userEmail");
+      if (userEmail) {
+        const scores: { [key: number]: number } = {};
+        await Promise.all(
+          infoResults.slice(0, PRELOAD_COUNT).map(async (info, index) => {
+            if (info && info.id) {
+              try {
+                const response = await api.post(
+                  "/users/matching-score",
+                  {
+                    tmdbId: info.id,
+                    title: info.title || boxOffice[index].movieNm,
+                    overview: info.overview || "",
+                    posterPath: info.poster_path || "",
+                    releaseDate: info.release_date || "",
+                    rating: info.vote_average || 0,
+                    genres: (info.genre_ids || []).map((gid: number) => ({
+                      id: 0,
+                      genreId: gid,
+                      genreName: "",
+                    })),
+                    actors: [],
+                  },
+                  {
+                    params: { email: userEmail },
+                  }
+                );
+                scores[index] = response.data.score || 0;
+              } catch (err) {
+                console.log(
+                  `취향 점수 조회 실패 (${boxOffice[index].movieNm}):`,
+                  err
+                );
+                scores[index] = 0;
+              }
+            }
+          })
+        );
+        setMatchingScores(scores);
+      }
     }
     fetchPostersAndInfos();
   }, [boxOffice, movieDetails]);
+
+  // Hover 시 취향 점수 개별 로딩
+  const fetchMatchingScoreOnHover = async (actualIdx: number) => {
+    // 이미 점수가 있거나 로딩 중이면 스킵
+    if (matchingScores[actualIdx] !== undefined || loadingScores[actualIdx]) {
+      return;
+    }
+
+    const userEmail = localStorage.getItem("userEmail");
+    const info = tmdbInfos[actualIdx];
+
+    if (!userEmail || !info || !info.id) return;
+
+    // 로딩 상태 설정
+    setLoadingScores((prev) => ({ ...prev, [actualIdx]: true }));
+
+    try {
+      const response = await api.post(
+        "/users/matching-score",
+        {
+          tmdbId: info.id,
+          title: info.title || boxOffice[actualIdx].movieNm,
+          overview: info.overview || "",
+          posterPath: info.poster_path || "",
+          releaseDate: info.release_date || "",
+          rating: info.vote_average || 0,
+          genres: (info.genre_ids || []).map((gid: number) => ({
+            id: 0,
+            genreId: gid,
+            genreName: "",
+          })),
+          actors: [],
+        },
+        {
+          params: { email: userEmail },
+        }
+      );
+
+      setMatchingScores((prev) => ({
+        ...prev,
+        [actualIdx]: response.data.score || 0,
+      }));
+    } catch (err) {
+      console.log(
+        `취향 점수 조회 실패 (${boxOffice[actualIdx].movieNm}):`,
+        err
+      );
+      setMatchingScores((prev) => ({
+        ...prev,
+        [actualIdx]: 0,
+      }));
+    } finally {
+      setLoadingScores((prev) => ({ ...prev, [actualIdx]: false }));
+    }
+  };
 
   const handleNextClick = () => {
     setStartIndex((prev) => (prev + 5) % boxOffice.length);
@@ -87,18 +196,24 @@ export default function BoxOffice() {
     );
   }
 
-  const handleDetailClick = async () => {
-    const currentMovie = boxOffice[hoveredIdx ?? 0];
+  const handleDetailClick = async (actualIdx: number) => {
+    const currentMovie = boxOffice[actualIdx];
     if (!currentMovie) return;
 
     try {
-      // KOFIC 개봉일에서 연도 추출
+      // tmdbInfos에서 이미 조회한 ID 사용
+      const tmdbInfo = tmdbInfos[actualIdx];
+      if (tmdbInfo && tmdbInfo.id) {
+        router.push(`/movie/${tmdbInfo.id}`);
+        return;
+      }
+
+      // tmdbInfo에 ID가 없는 경우에만 API 재조회
       const koficOpenDt = movieDetails[currentMovie.movieCd]?.openDt;
       const releaseYear = koficOpenDt ? koficOpenDt.slice(0, 4) : null;
 
       const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 
-      // 첫 번째 시도: 연도 포함 검색
       let searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(
         currentMovie.movieNm
       )}&language=ko-KR`;
@@ -110,7 +225,6 @@ export default function BoxOffice() {
       let searchResponse = await fetch(searchUrl);
       let searchData = await searchResponse.json();
 
-      // 첫 번째 시도에서 결과가 없고 연도가 있었다면, 연도 없이 재시도
       if (
         (!searchData.results || searchData.results.length === 0) &&
         releaseYear
@@ -172,13 +286,15 @@ export default function BoxOffice() {
                 return (
                   <div
                     key={actualIdx}
-                    className="flex flex-col items-center relative justify-center"
+                    className="flex flex-col items-center relative justify-center cursor-pointer"
                     onMouseEnter={() => {
                       setHoveredIdx(actualIdx);
+                      fetchMatchingScoreOnHover(actualIdx);
                     }}
                     onMouseLeave={() => {
                       setHoveredIdx(null);
                     }}
+                    onClick={() => handleDetailClick(actualIdx)}
                   >
                     <span
                       className={`absolute text-8xl bottom-2 left-[-25px] italic font-bold text-gray-200 drop-shadow-lg ${
@@ -196,7 +312,7 @@ export default function BoxOffice() {
                       initial={{ width: 251, height: 358 }}
                       animate={{
                         width: hoveredIdx === actualIdx ? 400 : 251,
-                        height: hoveredIdx === actualIdx ? 470 : 358,
+                        height: hoveredIdx === actualIdx ? 450 : 358,
                       }}
                       transition={{
                         type: "spring",
@@ -221,7 +337,7 @@ export default function BoxOffice() {
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
                           transition={{ delay: 0.3, duration: 0.1 }}
-                          className="absolute top-0 left-0 w-full h-[470px] flex items-center justify-center rounded-lg"
+                          className="absolute top-0 left-0 w-full h-[450px] flex items-center justify-center rounded-lg"
                           style={{
                             backgroundColor: "rgba(0,0,0,0.7)",
                             zIndex: 10,
@@ -229,7 +345,7 @@ export default function BoxOffice() {
                         >
                           {/* hover 영화상세내용 */}
                           <div className="text-white text-sm font-light text-left py-7 px-8 tracking-wide relative flex flex-col">
-                            <div className=" h-[330px] items-start">
+                            <div className=" h-[300px] items-start">
                               <div className="flex items-center justify-start">
                                 <p className="text-3xl font-semibold w-full text-left break-words flex items-end mb-1">
                                   {/* 영화 제목 */}
@@ -305,56 +421,38 @@ export default function BoxOffice() {
                                   : tmdbInfo.overview}
                               </span>
                             </div>
-                            <div className="flex items-center justify-between mt-2">
-                              <div className="flex flex-col items-center">
-                                <div className="mb-1 font-bold">
-                                  취향 일치율
-                                </div>
-                                <div className="ml-1">
-                                  <CirclePercentChart
-                                    percent={75}
-                                    color="#8b5cf6"
-                                    size={60}
-                                  />
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 mt-6">
-                                <button
-                                  onClick={handleDetailClick}
-                                  className="bg-zinc-600 py-[17px] px-7 rounded-full"
-                                >
-                                  {/* 영화상세보기 */}
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="6"
-                                    height="26"
-                                    viewBox="0 0 6 26"
-                                    fill="none"
-                                  >
-                                    <path
-                                      d="M3 9C2.36348 9 1.75303 9.23705 1.30295 9.65901C0.852858 10.081 0.600001 10.6533 0.600001 11.25V24.75C0.600001 25.3467 0.852858 25.919 1.30295 26.341C1.75303 26.7629 2.36348 27 3 27C3.63652 27 4.24697 26.7629 4.69706 26.341C5.14714 25.919 5.4 25.3467 5.4 24.75V11.25C5.4 10.6533 5.14714 10.081 4.69706 9.65901C4.24697 9.23705 3.63652 9 3 9ZM3 0C2.40666 0 1.82664 0.16495 1.33329 0.473991C0.839943 0.783033 0.455426 1.22229 0.228364 1.7362C0.00130069 2.25012 -0.0581104 2.81562 0.0576452 3.36119C0.173401 3.90676 0.459123 4.4079 0.878681 4.80124C1.29824 5.19457 1.83279 5.46244 2.41473 5.57096C2.99667 5.67948 3.59987 5.62378 4.14805 5.41091C4.69623 5.19804 5.16477 4.83755 5.49441 4.37504C5.82405 3.91253 6 3.36876 6 2.8125C6 2.06658 5.68393 1.35121 5.12132 0.823762C4.55871 0.296316 3.79565 0 3 0Z"
-                                      fill="#C6C6C6"
+                            {/* 취향 일치율 */}
+                            {isLoggedIn ? (
+                              <div className="flex items-center justify-end mt-2">
+                                <div className="flex flex-col items-center">
+                                  <div className="ml-1">
+                                    <CirclePercentChart
+                                      percent={matchingScores[actualIdx] || 0}
+                                      color="#8b5cf6"
+                                      size={70}
                                     />
-                                  </svg>
-                                </button>
-                                <div className="bg-zinc-600 py-[15px] px-4 rounded-full">
-                                  <button className="">
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      width="29"
-                                      height="27"
-                                      viewBox="0 0 29 27"
-                                      fill="none"
-                                    >
-                                      <path
-                                        d="M5.54625 27L7.9025 17.0171L0 10.3026L10.44 9.41447L14.5 0L18.56 9.41447L29 10.3026L21.0975 17.0171L23.4537 27L14.5 21.7066L5.54625 27Z"
-                                        fill="#C6C6C6"
-                                      />
-                                    </svg>
-                                  </button>
+                                  </div>
+                                  <div className="mt-1 font-semibold ml-2">
+                                    취향 일치율
+                                  </div>
                                 </div>
                               </div>
-                            </div>
+                            ) : (
+                              <div className="flex items-center justify-end mt-2">
+                                <div className="flex flex-col items-center">
+                                  <div className="ml-1">
+                                    <CirclePercentChart
+                                      color="#8b5cf6"
+                                      size={70}
+                                      label="?"
+                                    />
+                                  </div>
+                                  <div className="mt-1 font-semibold ml-2">
+                                    취향 일치율
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </motion.div>
                       </AnimatePresence>

@@ -1,5 +1,6 @@
 package com.example.moviejbackend.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,5 +17,7 @@ public class ActorInfo {
     private Long id;
 
     private Long actorId;  // 배우 고유 ID
+    
+    @JsonProperty("name")  // JSON 응답 시 "name"으로 출력
     private String actorName;
 }

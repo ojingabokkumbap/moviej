@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { useMoviesTMDB } from "@/hooks/useMoviesTMDB";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+
+import { useNotification } from "@/contexts/NotificationContext";
+import { checkWishlist, toggleWishlist } from "@/lib/wishlistAPI";
 
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
@@ -143,6 +147,7 @@ async function fetchMovieRuntime(movieId: number): Promise<number | null> {
 }
 
 export default function MoviesPage() {
+  const router = useRouter();
   const [selectedGenre, setSelectedGenre] = useState<string>("all");
 
   // 상영시간 캐시
@@ -163,6 +168,14 @@ export default function MoviesPage() {
 
   const [center, setCenter] = useState(2); // 0~4, 가운데는 2
   const { movies, logos, genreMap } = useMoviesTMDB(); // 캐러셀용
+
+  const { showNotification } = useNotification();
+  const [wishlistStatus, setWishlistStatus] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const [wishlistLoading, setWishlistLoading] = useState<{
+    [key: number]: boolean;
+  }>({});
 
   // 그리드용 영화 데이터 fetch 함수
   const fetchGridMovies = async (genre: string, page: number) => {
@@ -307,6 +320,33 @@ export default function MoviesPage() {
         setCarouselCasts((prev) => ({ ...prev, ...newCasts }));
       });
     }
+
+    // 찜 여부 확인 (이미 확인한 영화는 제외)
+    const userEmail = localStorage.getItem("userEmail");
+    if (userEmail && ids.length > 0) {
+      // 아직 확인하지 않은 영화만 필터링
+      const idsToCheckWishlist = ids.filter((id) => !(id in wishlistStatus));
+
+      if (idsToCheckWishlist.length > 0) {
+        Promise.all(
+          idsToCheckWishlist.map(async (id) => {
+            try {
+              const isWishlisted = await checkWishlist(userEmail, id);
+              return { id, isWishlisted };
+            } catch {
+              return { id, isWishlisted: false };
+            }
+          })
+        ).then((results) => {
+          const newWishlistStatus: { [key: number]: boolean } = {};
+          results.forEach(({ id, isWishlisted }) => {
+            newWishlistStatus[id] = isWishlisted;
+          });
+          setWishlistStatus((prev) => ({ ...prev, ...newWishlistStatus }));
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [carouselMovies]);
 
   // 장르 필터링
@@ -321,6 +361,42 @@ export default function MoviesPage() {
     { name: "호러", id: 27 },
     { name: "추리", id: 9648 },
   ];
+
+  // 찜하기 토글 핸들러
+  const handleWishlistToggle = async (movieId: number, movie: any) => {
+    const userEmail = localStorage.getItem("userEmail");
+
+    if (!userEmail) {
+      showNotification("로그인이 필요합니다.", "warning");
+      return;
+    }
+
+    if (!movie) return;
+
+    setWishlistLoading((prev) => ({ ...prev, [movieId]: true }));
+    try {
+      await toggleWishlist(userEmail, {
+        movieId: movieId,
+        title: movie.title,
+        posterPath: movie.poster_path,
+      });
+
+      const isNowInWishlist = !wishlistStatus[movieId];
+      setWishlistStatus((prev) => ({ ...prev, [movieId]: isNowInWishlist }));
+
+      showNotification(
+        isNowInWishlist
+          ? "컬렉션에 추가되었습니다."
+          : "컬렉션에서 제거되었습니다.",
+        "success"
+      );
+    } catch (err) {
+      console.error("찜하기 처리 실패:", err);
+      showNotification("컬렉션 처리에 실패했습니다.", "error");
+    } finally {
+      setWishlistLoading((prev) => ({ ...prev, [movieId]: false }));
+    }
+  };
 
   return (
     <main className="flex flex-col items-center justify-center mt-[10rem] w-full">
@@ -350,7 +426,7 @@ export default function MoviesPage() {
             indices.map((imgIdx, posIdx) => {
               const size =
                 posIdx === 2
-                  ? "w-[440px] h-[625px]"
+                  ? "w-[430px] h-[625px]"
                   : posIdx === 1 || posIdx === 3
                   ? "w-[310px] h-[510px]"
                   : "w-[280px] h-[450px]";
@@ -374,11 +450,11 @@ export default function MoviesPage() {
 
               if (posIdx === 0 || posIdx === 1) {
                 // 오른쪽만 기울임 (왼쪽은 그대로)
-                clipPath = "polygon(0px 26px, 100% 12%, 100% 80%, 0px 95%)";
+                clipPath = "polygon(0px 26px, 100% 15%, 100% 85%, 0px 95%)";
               }
               if (posIdx === 3 || posIdx === 4) {
                 // 왼쪽만 기울임 (오른쪽은 그대로)
-                clipPath = "polygon(0px 15%, 100% 25px, 100% 94%, 0px 87%)";
+                clipPath = "polygon(0px 15%, 100% 25px, 100% 94%, 0px 85%)";
               }
 
               return (
@@ -396,12 +472,12 @@ export default function MoviesPage() {
                   <Image
                     src={images[imgIdx]}
                     alt={`carousel-${imgIdx}`}
-                    width={430}
+                    width={420}
                     height={570}
                     priority={posIdx === 2}
                     placeholder="blur"
                     blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
-                    className={`w-full h-full object-contain rounded-lg shadow-xl   ${
+                    className={`w-full h-full object-contain rounded-lg shadow-xl -mt-1  ${
                       posIdx === 2
                         ? " transition-transform duration-500 group-hover:scale-105 brightness-100"
                         : ""
@@ -422,10 +498,10 @@ export default function MoviesPage() {
                         width={300}
                         height={100}
                         alt={titles[imgIdx]}
-                        className="absolute flex min-h-28 items-center bottom-36 left-1/2 -translate-x-1/2 w-2/3 h-auto z-10 pointer-events-none max-h-32"
+                        className="absolute flex min-h-28 items-center bottom-44 left-1/2 -translate-x-1/2 h-auto z-10 pointer-events-none max-h-32"
                         style={{ objectFit: "contain" }}
                       />
-                      <div className="absolute bottom-20 left-20 w-full text-left z-10 text-gray-200 text-sm">
+                      <div className="absolute bottom-10 left-20 text-left z-10 text-gray-200 text-sm w-[280px]">
                         {/* 연령등급 라벨 */}
                         <div className="flex items-center justify-start tracking-wider text-sm gap-2 opacity-90">
                           <div
@@ -441,7 +517,7 @@ export default function MoviesPage() {
                               actualRatings
                             )}
                           </div>
-                          <span className="py-0.5  font-light">
+                          <span className="py-0.5 text-sm font-light">
                             {carouselRuntimes[carouselMovies[imgIdx].id]
                               ? `${
                                   carouselRuntimes[carouselMovies[imgIdx].id]
@@ -468,9 +544,38 @@ export default function MoviesPage() {
                               {carouselCasts[carouselMovies[imgIdx].id]
                                 .slice(0, 3)
                                 .join(", ")}{" "}
-                              출연
                             </span>
                           )}
+                        </div>
+                        <div className="flex gap-3 w-full mt-3 text-base">
+                          <button
+                            className="bg-violet-700 border-violet-700 px-4 py-2.5 w-1/2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleWishlistToggle(
+                                carouselMovies[imgIdx].id,
+                                carouselMovies[imgIdx]
+                              );
+                            }}
+                            disabled={
+                              wishlistLoading[carouselMovies[imgIdx].id]
+                            }
+                          >
+                            {wishlistStatus[carouselMovies[imgIdx].id]
+                              ? "컬렉션 제거"
+                              : "컬렉션 추가"}
+                          </button>
+                          <button
+                            className="border border-gray-300 px-4 py-2.5 w-1/2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(
+                                `/movie/${carouselMovies[imgIdx].id}`
+                              );
+                            }}
+                          >
+                            상세정보
+                          </button>
                         </div>
                       </div>
                     </>

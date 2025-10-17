@@ -2,6 +2,12 @@ export default function CirclePercentChart({
   percent = 65,
   color = "#7c3aed",
   size = 100,
+  label,
+}: {
+  percent?: number; // 0~100
+  color?: string; // 진행률 색상
+  size?: number; // 차트 크기 (px)
+  label?: string; // 중앙에 표시할 텍스트 (기본: percent%)
 }) {
   // size에 따라 동적으로 계산
   const strokeWidth = Math.max(size * 0.08, 6); // 최소 6px, size에 따라 비례
@@ -48,11 +54,11 @@ export default function CirclePercentChart({
       <div
         className="absolute inset-0 flex items-center justify-center font-bold text-white"
         style={{
-          fontSize: size * 0.22,
+          fontSize: label !== undefined ? size * 0.4 : size * 0.22,
           textShadow: "0 2px 4px rgba(0,0,0,0.8)"
         }}
       >
-        {percent}%
+        {label !== undefined ? label : `${percent}%`}
       </div>
     </div>
   );

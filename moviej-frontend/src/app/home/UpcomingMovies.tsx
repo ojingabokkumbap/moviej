@@ -112,6 +112,7 @@ export default function UpcomingMovies() {
             <div
               key={movie.id}
               className="w-full max-w-[285px] h-[170px] relative group cursor-pointer"
+              onClick={handleDetailClick}
             >
               <Image
                 src={`https://image.tmdb.org/t/p/original${movie.poster_path}`}
@@ -129,27 +130,8 @@ export default function UpcomingMovies() {
               <div className="absolute left-[-7px] min-w-[299px] max-w-[299px] h-[45px] bottom-0 bg-black bg-opacity-90 opacity-0 group-hover:opacity-90 transition-opacity duration-300 flex flex-col justify-center items-center text-white z-20">
                 <div className="flex justify-between w-full px-3">
                   <div>
-                  <h3 className="text-base font-bold">{movie.title}</h3>
+                    <h3 className="text-base font-bold">{movie.title}</h3>
                   </div>
-                  <button
-                    onClick={handleDetailClick}
-                    className=""
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
-                      className="size-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
-                      />
-                    </svg>
-                  </button>
                 </div>
               </div>
 

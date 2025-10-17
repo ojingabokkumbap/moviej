@@ -4,14 +4,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
-import com.example.moviejbackend.service.RecommendationService;
+import com.example.moviejbackend.service.MatchingScoreService;
 
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
 public class MatchingScoreController {
 
-    private final RecommendationService recommendationService;
+    private final MatchingScoreService recommendationService;
 
 
     @PostMapping("/matching-score")
