@@ -1,13 +1,21 @@
-# 멀티 스테이지 빌드 사용
+# ----------------------------
+# 빌드 단계 (Build Stage)
+# ----------------------------
 FROM eclipse-temurin:17-jdk as builder
 
+# 작업 디렉토리 설정
 WORKDIR /app
 
-# Gradle Wrapper와 build 파일들 먼저 복사
+# Gradle Wrapper와 build 파일 복사
 COPY gradlew .
 COPY gradle gradle
 COPY build.gradle .
 COPY settings.gradle .
+
+# --- 권한 문제 해결 ---
+# gradlew 실행 권한 부여 (이전 에러 해결)
+RUN chmod +x gradlew
+# ---------------------
 
 # 의존성 다운로드 (캐시 활용)
 RUN ./gradlew dependencies --no-daemon
@@ -15,30 +23,23 @@ RUN ./gradlew dependencies --no-daemon
 # 소스 코드 복사
 COPY src src
 
-# 애플리케이션 빌드
+# 애플리케이션 빌드 (테스트 제외)
 RUN ./gradlew build --no-daemon -x test
 
-# 실행 단계
+# ----------------------------
+# 실행 단계 (Run Stage)
+# ----------------------------
 FROM eclipse-temurin:17-jre
 
+# 작업 디렉토리 설정
 WORKDIR /app
 
-# curl과 netcat 설치 (healthcheck 및 네트워크 테스트용)
-RUN apt-get update && apt-get install -y curl netcat-traditional && rm -rf /var/lib/apt/lists/*
+# 필요한 유틸리티(curl) 설치 및 캐시 정리
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # 빌드된 JAR 파일 복사
+# 빌더 스테이지의 /app/build/libs/*.jar 파일을 현재 스테이지의 app.jar로 복사
 COPY --from=builder /app/build/libs/*.jar app.jar
 
-# 시작 스크립트 생성 (DB 대기 + 애플리케이션 실행)
-RUN echo '#!/bin/bash\n\
-echo "Waiting for MySQL to be ready..."\n\
-while ! nc -z db 3306; do\n\
-  echo "MySQL is not ready yet, waiting..."\n\
-  sleep 2\n\
-done\n\
-echo "MySQL is ready! Starting Spring Boot..."\n\
-exec java -Xmx512m -Xms256m -jar app.jar' > /app/start.sh && \
-chmod +x /app/start.sh
-
-# 애플리케이션 실행
-CMD ["/app/start.sh"]
+# 애플리케이션 실행 명령어
+ENTRYPOINT ["java", "-Xmx512m", "-Xms256m", "-jar", "app.jar"]
