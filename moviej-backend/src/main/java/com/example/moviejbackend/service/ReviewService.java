@@ -30,9 +30,12 @@ public class ReviewService {
     @Autowired
     private ReviewLikeRepository reviewLikeRepository;
 
-    // 전체 리뷰 조회 (isLiked 포함)
+    // 전체 리뷰 조회 (isLiked 포함) - 이메일 없이도 조회 가능
     public List<ReviewResponseDto> getAllReviewsWithLike(String email) {
-        User user = userRepository.findByEmail(email).orElse(null);
+        final User user = (email != null && !email.isEmpty()) 
+            ? userRepository.findByEmail(email).orElse(null) 
+            : null;
+        
         List<Review> reviews = reviewRepository.findAllByOrderByCreatedAtDesc();
         return reviews.stream().map(review -> {
             boolean isLiked = false;
@@ -55,9 +58,12 @@ public class ReviewService {
         }).collect(Collectors.toList());
     }
 
-    // 전체 리뷰 페이지네이션 조회 (isLiked 포함)
+    // 전체 리뷰 페이지네이션 조회 (isLiked 포함) - 이메일 없이도 조회 가능
     public PagedReviewResponseDto getAllReviewsPagedWithLike(String email, Pageable pageable) {
-        User user = userRepository.findByEmail(email).orElse(null);
+        final User user = (email != null && !email.isEmpty()) 
+            ? userRepository.findByEmail(email).orElse(null) 
+            : null;
+            
         Page<Review> reviewPage = reviewRepository.findAllByOrderByCreatedAtDesc(pageable);
 
         List<ReviewResponseDto> content = reviewPage.getContent().stream()
@@ -113,9 +119,12 @@ public class ReviewService {
             .collect(Collectors.toList());
     }
 
-    // 영화별 전체 리뷰 조회 (isLiked 포함)
+    // 영화별 전체 리뷰 조회 (isLiked 포함) - 이메일 없이도 조회 가능
     public List<ReviewResponseDto> getMovieReviewsWithLike(String tmdbMovieId, String email) {
-        User user = userRepository.findByEmail(email).orElse(null);
+        final User user = (email != null && !email.isEmpty()) 
+            ? userRepository.findByEmail(email).orElse(null) 
+            : null;
+            
         List<Review> reviews = reviewRepository.findByTmdbMovieIdOrderByCreatedAtDesc(tmdbMovieId);
         return reviews.stream().map(review -> {
             boolean isLiked = false;
@@ -138,9 +147,12 @@ public class ReviewService {
         }).collect(Collectors.toList());
     }
 
-    // 영화별 페이지네이션 리뷰 조회 (isLiked 포함)
+    // 영화별 페이지네이션 리뷰 조회 (isLiked 포함) - 이메일 없이도 조회 가능
     public PagedReviewResponseDto getMovieReviewsPagedWithLike(String tmdbMovieId, String email, Pageable pageable) {
-        User user = userRepository.findByEmail(email).orElse(null);
+        final User user = (email != null && !email.isEmpty()) 
+            ? userRepository.findByEmail(email).orElse(null) 
+            : null;
+            
         Page<Review> reviewPage = reviewRepository.findByTmdbMovieIdOrderByCreatedAtDesc(tmdbMovieId, pageable);
 
         List<ReviewResponseDto> content = reviewPage.getContent().stream()
@@ -177,7 +189,7 @@ public class ReviewService {
 
     // 리뷰작성
     public Review createReview(String email, String tmdbMovieId, String movieTitle, String title, Integer rating, String content) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("로그인이 필요한 서비스입니다."));
 
         // 중복 체크
         if (reviewRepository.existsByTmdbMovieIdAndUser(tmdbMovieId, user)) {
@@ -198,7 +210,7 @@ public class ReviewService {
     // 리뷰 좋아요/좋아요 취소 토글 -> 업데이트된 ReviewResponseDto 반환
     public ReviewResponseDto toggleLikeReview(Long reviewId, String email) {
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException("로그인이 필요한 서비스입니다."));
         Review review = reviewRepository.findById(reviewId)
             .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
         
@@ -239,7 +251,7 @@ public class ReviewService {
     // 자신이 쓴 리뷰만 조회 (최적화: User ID로 직접 조회)
     public List<ReviewResponseDto> getReviewsByUser(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("로그인이 필요한 서비스입니다."));
         
         // User ID로 직접 조회 (전체 리뷰를 가져와서 필터링하지 않음)
         List<Review> reviews = reviewRepository.findByUserIdOrderByCreatedAtDesc(user.getId());

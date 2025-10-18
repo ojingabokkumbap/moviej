@@ -36,8 +36,7 @@ export function useMoviesKOFIC() {
               const detailData = await res.json();
               details[item.movieCd] =
                 detailData.movieInfoResult?.movieInfo || {};
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            } catch (e) {
+            } catch {
               details[item.movieCd] = {};
             }
           })

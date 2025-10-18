@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { fetchMovieCredits, useMoviesTMDB } from "@/hooks/useMoviesTMDB";
 import BoxOffice from "./BoxOffice";
 import UpcomingMovies from "./UpcomingMovies";
@@ -237,9 +238,11 @@ export default function Home() {
               <>
                 <div className="text-6xl font-bold tracking-wide">
                   {logos[startIdx + (selectedIdx ?? 0)] ? (
-                    <img
+                    <Image
                       src={logos[startIdx + (selectedIdx ?? 0)]}
                       alt={visibleMovies[selectedIdx ?? 0].title + " 로고"}
+                      width={500}
+                      height={150}
                       className="max-w-[500px] max-h-[200px] h-[150px] flex justify-left items-center"
                       style={{ objectFit: "contain" }}
                     />
@@ -393,10 +396,12 @@ export default function Home() {
           </div>
           <div className="flex gap-4 overflow-hidden justify-start w-full">
             {visibleMovies.map((movie, idx) => (
-              <img
+              <Image
                 key={movie.id}
                 src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
                 alt={movie.title}
+                width={150}
+                height={250}
                 className={`w-[150px] h-[250px] object-cover shadow cursor-pointer transition-all duration-300 ${
                   selectedIdx === idx
                     ? ""

@@ -20,10 +20,10 @@ public class ReviewController {
     @Autowired
     private ReviewService reviewService;
 
-     // 전체 리뷰 조회 (페이지네이션)
+     // 전체 리뷰 조회 (페이지네이션) - 로그인 없이도 조회 가능
     @GetMapping
     public ResponseEntity<?> getAllReviews(
-            @RequestParam(value = "email") String email,
+            @RequestParam(value = "email", required = false) String email, // 선택적 파라미터
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size,
             Pageable pageable) {
@@ -48,11 +48,11 @@ public class ReviewController {
         return ResponseEntity.ok(reviews);
     }
 
-    // 특정 영화 리뷰 조회 (페이지네이션)
+    // 특정 영화 리뷰 조회 (페이지네이션) - 로그인 없이도 조회 가능
     @GetMapping("/movie/{tmdbMovieId}")
     public ResponseEntity<?> getMovieReviews(
             @PathVariable String tmdbMovieId,
-            @RequestParam(value = "email") String email, // email 파라미터 추가
+            @RequestParam(value = "email", required = false) String email, // 선택적 파라미터
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size,
             Pageable pageable) {  

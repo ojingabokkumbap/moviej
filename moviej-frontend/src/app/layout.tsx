@@ -7,7 +7,6 @@ import "@/app/globals.css";
 
 import Header from "@/components/header";
 import Footer from "@/components/Footer";
-import MovieChatBot from "@/components/MovieChatBot";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -19,7 +18,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Header />
           {children}
           <Footer />
-          <MovieChatBot />
         </NotificationProvider>
       </body>
     </html>

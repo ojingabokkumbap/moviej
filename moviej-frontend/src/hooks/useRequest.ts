@@ -8,7 +8,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import api from '@/lib/api';
+import { api } from "@/lib/api";
 
 /**
  * 요청 상태를 나타내는 타입 정의

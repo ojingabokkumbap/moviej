@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { api } from "@/lib/api";
 import { fetchMovieDetails as getMovieDetails } from "@/lib/tmdbAPI";
 import { useNotification } from "@/contexts/NotificationContext";
+import { checkWishlist, toggleWishlist } from "@/lib/wishlistAPI";
 
 interface Review {
   id: number;
@@ -28,6 +30,10 @@ export default function BestReview() {
   const { showNotification } = useNotification();
   // 영화 상세 정보 캐싱
   const [movieDetails, setMovieDetails] = useState<{ [key: string]: any }>({});
+  
+  // 찜하기 상태
+  const [wishlistStatus, setWishlistStatus] = useState<{ [key: string]: boolean }>({});
+  const [wishlistLoading, setWishlistLoading] = useState<{ [key: string]: boolean }>({});
 
   const itemsPerPage = 5;
 
@@ -39,7 +45,7 @@ export default function BestReview() {
         const res = await api.get("/reviews/popular");
         const sorted = [...res.data].sort((a, b) => b.likes - a.likes);
         setReviews(sorted);
-        
+
         // 리뷰 데이터를 먼저 로드하고 스켈레톤 해제
         setIsLoading(false);
 
@@ -98,27 +104,60 @@ export default function BestReview() {
       ? `#${selectedMovie.genres[0].name}`
       : "#장르없음";
 
-  const handleLikeToggle = async (reviewId: number) => {
+  // 찜 상태 확인
+  useEffect(() => {
+    const userEmail = localStorage.getItem("userEmail");
+    if (userEmail && reviews.length > 0) {
+      Promise.all(
+        reviews.map(async (review) => {
+          try {
+            const isWishlisted = await checkWishlist(userEmail, parseInt(review.tmdbMovieId));
+            return { id: review.tmdbMovieId, isWishlisted };
+          } catch {
+            return { id: review.tmdbMovieId, isWishlisted: false };
+          }
+        })
+      ).then((results) => {
+        const newWishlistStatus: { [key: string]: boolean } = {};
+        results.forEach(({ id, isWishlisted }) => {
+          newWishlistStatus[id] = isWishlisted;
+        });
+        setWishlistStatus(newWishlistStatus);
+      });
+    }
+  }, [reviews]);
+
+  // 컬렉션 추가/제거 핸들러
+  const handleWishlistToggle = async () => {
+    const userEmail = localStorage.getItem("userEmail");
+    
+    if (!userEmail) {
+      showNotification("로그인이 필요합니다.", "warning");
+      return;
+    }
+
+    if (!selectedReview) return;
+
+    setWishlistLoading((prev) => ({ ...prev, [selectedReview.tmdbMovieId]: true }));
     try {
-      const userEmail = localStorage.getItem("userEmail");
-      if (!userEmail) {
-        showNotification("로그인이 필요합니다.", "warning");
-        return;
-      }
+      await toggleWishlist(userEmail, {
+        movieId: parseInt(selectedReview.tmdbMovieId),
+        title: selectedReview.movieTitle,
+        posterPath: selectedMovie?.poster_path || "",
+      });
 
-      // 서버에서 최신 review 상태를 받아옴 (isLiked, likes 등)
-      const res = await api.post(
-        `/reviews/${reviewId}/like?email=${userEmail}`
+      const isNowInWishlist = !wishlistStatus[selectedReview.tmdbMovieId];
+      setWishlistStatus((prev) => ({ ...prev, [selectedReview.tmdbMovieId]: isNowInWishlist }));
+      
+      showNotification(
+        isNowInWishlist ? "컬렉션에 추가되었습니다." : "컬렉션에서 제거되었습니다.",
+        "success"
       );
-      const updatedReview = res.data; // 서버에서 최신 review 반환
-
-      setReviews((prev) =>
-        prev.map((review) =>
-          review.id === reviewId ? { ...review, ...updatedReview } : review
-        )
-      );
-    } catch {
-      showNotification("좋아요 처리에 실패했습니다.", "error");
+    } catch (err) {
+      console.error("컬렉션 처리 실패:", err);
+      showNotification("컬렉션 처리에 실패했습니다.", "error");
+    } finally {
+      setWishlistLoading((prev) => ({ ...prev, [selectedReview.tmdbMovieId]: false }));
     }
   };
 
@@ -235,11 +274,13 @@ export default function BestReview() {
                 {selectedReview?.content}
               </p>
               <div className="flex items-center mb-1">
-                <div className="w-5 h-5 bg-gradient-to-br from-violet-600 to-pink-600 rounded-full flex items-center justify-center">
+                <div className="w-5 h-5 bg-gradient-to-br from-violet-600 to-pink-600 rounded-full flex items-center justify-center overflow-hidden">
                   {selectedReview?.profileImage ? (
-                    <img
+                    <Image
                       src={selectedReview.profileImage}
                       alt="프로필 이미지"
+                      width={20}
+                      height={20}
                       className="w-full h-full object-cover rounded-full"
                     />
                   ) : (
@@ -275,18 +316,19 @@ export default function BestReview() {
               </div>
             </div>
             <div className="flex gap-4 w-full mt-4 items-center">
-              <div className="bg-violet-600  border-violet-600 text-center text-white px-4 py-2.5 w-1/3">
+              <button
+                onClick={handleWishlistToggle}
+                disabled={wishlistLoading[selectedReview?.tmdbMovieId]}
+                className="bg-violet-600 text-white px-4 py-2.5 w-1/3 disabled:opacity-50 transition-opacity"
+              >
+                {wishlistStatus[selectedReview?.tmdbMovieId]
+                  ? "컬렉션 제거"
+                  : "컬렉션 추가"}
+              </button>
+              <div className="border border-gray-300 px-4 py-2.5 w-1/3 text-center">
                 <Link href={`/movie/${selectedReview?.tmdbMovieId}`}>
                   상세정보
                 </Link>
-              </div>
-              <div className="border border-gray-300 px-4 py-2.5 w-1/3 text-center">
-                <button
-                  onClick={() => handleLikeToggle(selectedReview.id)}
-                  className=""
-                >
-                  컬렉션 추가
-                </button>
               </div>
             </div>
           </div>
@@ -311,7 +353,7 @@ export default function BestReview() {
               {visibleIndexes.map((idx, i) => {
                 const review = reviews[idx];
                 return (
-                  <img
+                  <Image
                     key={review?.id || i}
                     src={
                       review?.tmdbMovieId && posters[review.tmdbMovieId]
@@ -319,6 +361,8 @@ export default function BestReview() {
                         : "/no-poster.png"
                     }
                     alt={review?.movieTitle || ""}
+                    width={320}
+                    height={420}
                     className={`object-cover shadow-lg cursor-pointer transition-all 
                   ${
                     selectedIdx === idx

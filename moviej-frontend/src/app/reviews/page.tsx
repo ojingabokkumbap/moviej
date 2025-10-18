@@ -23,10 +23,6 @@ interface Review {
   liked?: boolean;
 }
 
-interface MovieDetail {
-  poster_path: string;
-}
-
 function ReviewsPage() {
   const searchParams = useSearchParams();
   const { showNotification } = useNotification();
@@ -35,7 +31,6 @@ function ReviewsPage() {
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [sortBy, setSortBy] = useState<"latest" | "popular">("latest");
-  const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [posters, setPosters] = useState<{ [key: string]: string }>({});
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -57,20 +52,6 @@ function ReviewsPage() {
   });
 
   // 초기 데이터 로드
-  useEffect(() => {
-    setReviews([]);
-    setPage(0);
-    setHasMore(true);
-    fetchInitialData();
-  }, [movieId]);
-
-  // inView가 true가 되면 추가 데이터 로드
-  useEffect(() => {
-    if (inView && hasMore && !loading && reviews.length > 0) {
-      fetchMoreData();
-    }
-  }, [inView, hasMore, loading]);
-
   const fetchInitialData = async () => {
     setLoading(true);
     try {
@@ -89,8 +70,8 @@ function ReviewsPage() {
           responses.data.content ? !responses.data.last : reviewData.length >= 5
         );
 
-        const movieData = await getMovieDetails(movieId);
-        setMovie(movieData);
+        // 영화 데이터는 사용하지 않으므로 제거
+        await getMovieDetails(movieId);
       } else {
         const responses = await api.get("/reviews", {
           params: {
@@ -158,6 +139,23 @@ function ReviewsPage() {
     }
   };
 
+  // 초기 데이터 로드
+  useEffect(() => {
+    setReviews([]);
+    setPage(0);
+    setHasMore(true);
+    fetchInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movieId]);
+
+  // inView가 true가 되면 추가 데이터 로드
+  useEffect(() => {
+    if (inView && hasMore && !loading && reviews.length > 0) {
+      fetchMoreData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inView, hasMore, loading, reviews.length]);
+
   // 리뷰들의 포스터 가져오기
   const fetchPostersForReviews = async (reviewList: Review[]) => {
     const posterMap: { [key: string]: string } = { ...posters };
@@ -219,12 +217,12 @@ function ReviewsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white mt-16">
+    <div className="min-h-screen text-white mt-16">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* 헤더 */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">
-            {movieId ? `${movieTitle} ` : "감상평"}
+            {movieId ? `${movieTitle} 감상평 ` : "감상평"}
           </h1>
         </div>
         {/* 정렬 옵션 */}

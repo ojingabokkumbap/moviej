@@ -60,11 +60,8 @@ export default function UpcomingMovies() {
 
   const rotatedMovies = getRotatedMovies();
 
-  const handleDetailClick = () => {
-    const currentMovie = rotatedMovies[startIdx ?? 0];
-    if (currentMovie) {
-      router.push(`/movie/${currentMovie.id}`);
-    }
+  const handleDetailClick = (movieId: number) => {
+    router.push(`/movie/${movieId}`);
   };
 
   return (
@@ -112,7 +109,7 @@ export default function UpcomingMovies() {
             <div
               key={movie.id}
               className="w-full max-w-[285px] h-[170px] relative group cursor-pointer"
-              onClick={handleDetailClick}
+              onClick={() => handleDetailClick(movie.id)}
             >
               <Image
                 src={`https://image.tmdb.org/t/p/original${movie.poster_path}`}

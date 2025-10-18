@@ -170,12 +170,12 @@ export default function MovieDetailPage() {
                 posterPath: movieData.poster_path || "",
                 releaseDate: movieData.release_date || "",
                 rating: movieData.vote_average || 0,
-                genres: movieData.genres.map((g) => ({
+                genres: movieData.genres.map((g: { id: any; name: any; }) => ({
                   id: 0,
                   genreId: g.id,
                   genreName: g.name,
                 })),
-                actors: creditsData.cast.slice(0, 10).map((a) => ({
+                actors: creditsData.cast.slice(0, 10).map((a: { id: any; name: any; }) => ({
                   id: 0,
                   actorId: a.id,
                   actorName: a.name,
@@ -332,7 +332,6 @@ export default function MovieDetailPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* 백드롭 이미지 - 배경으로만 사용 */}
       <div
         className="fixed inset-0 z-0"
         style={{
@@ -343,7 +342,7 @@ export default function MovieDetailPage() {
           ), url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          backgroundAttachment: "fixed",
+          /* backgroundAttachment: "fixed", */
         }}
       />
 
@@ -806,12 +805,12 @@ export default function MovieDetailPage() {
                         reviews.slice(0, 4).map((review) => (
                           <div
                             key={review.id}
-                            className="bg-zinc-800 bg-opacity-60 border border-gray-500 rounded-lg w-1/4"
+                            className="bg-zinc-800 bg-opacity-60 rounded-lg w-1/4"
                           >
                             {/* 헤더 - 프로필 정보 */}
                             <div className="flex items-center justify-between px-8 py-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                                <div className="w-8 h-8  rounded-full flex items-center justify-center">
                                   {review.profileImage ? (
                                     <Image
                                       src={review.profileImage}
@@ -821,7 +820,7 @@ export default function MovieDetailPage() {
                                       className="w-full h-full object-cover rounded-full"
                                     />
                                   ) : (
-                                    <span className="text-white font-medium rounded-full">
+                                    <span className="w-8 h-8 bg-gradient-to-br from-violet-600 to-pink-600 rounded-full flex items-center justify-center">
                                       {review.nickname?.charAt(0).toUpperCase()}
                                     </span>
                                   )}
