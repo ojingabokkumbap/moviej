@@ -13,12 +13,6 @@ import io.github.cdimascio.dotenv.Dotenv;
 public class MoviejBackendApplication {
 
     public static void main(String[] args) {
-
-        Dotenv dotenv = Dotenv.load();
-        
-        System.setProperty("GMAIL_USERNAME", dotenv.get("GMAIL_USERNAME"));
-        System.setProperty("GMAIL_APP_PASSWORD", dotenv.get("GMAIL_APP_PASSWORD"));
-        
         SpringApplication.run(MoviejBackendApplication.class, args);
     }
 
