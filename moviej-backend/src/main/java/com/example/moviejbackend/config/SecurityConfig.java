@@ -27,14 +27,23 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // 허용할 오리진 (프론트엔드 주소)
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000",
-            "http://localhost:4200",
-            "http://localhost:8081",
-            "http://localhost:5173",
-            "http://127.0.0.1:5500"
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            // 로컬 개발 환경
+            "http://localhost:*",
+            "http://127.0.0.1:*",
+            
+            // 배포 환경 패턴
+            "https://moviej-front.vercel.app",
+            // "https://*.netlify.app", 
+            // "https://*.onrender.com",
+            // "https://*.github.io",
+            // "https://*.surge.sh",
+            // "https://*.firebaseapp.com",
+            
+            // 개발용 전체 허용 (배포 시에는 제거 권장)
+            "*"
         ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
