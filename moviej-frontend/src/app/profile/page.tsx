@@ -67,6 +67,28 @@ interface UserPreferences {
   createdAt?: string;
 }
 
+const TMDB_GENRES = [
+  { id: 28, name: "액션" },
+  { id: 12, name: "모험" },
+  { id: 16, name: "애니메이션" },
+  { id: 35, name: "코미디" },
+  { id: 80, name: "범죄" },
+  { id: 99, name: "다큐멘터리" },
+  { id: 18, name: "드라마" },
+  { id: 10751, name: "가족" },
+  { id: 14, name: "판타지" },
+  { id: 36, name: "역사" },
+  { id: 27, name: "공포" },
+  { id: 10402, name: "음악" },
+  { id: 9648, name: "미스터리" },
+  { id: 10749, name: "로맨스" },
+  { id: 878, name: "SF" },
+  { id: 10770, name: "TV 영화" },
+  { id: 53, name: "스릴러" },
+  { id: 10752, name: "전쟁" },
+  { id: 37, name: "서부" },
+];
+
 export default function MovieNotePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<
@@ -78,15 +100,13 @@ export default function MovieNotePage() {
   const [isLoadingReviews, setIsLoadingReviews] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-  const [userPreferences, setUserPreferences] =
-    useState<UserPreferences | null>(null);
+  const [hasOnboardingData, setHasOnboardingData] = useState(false);
+  const [reviewGenreData, setReviewGenreData] = useState<{
+    labels: string[];
+    data: number[];
+  }>({ labels: [], data: [] });
 
-  // 페이지 타이틀 설정
-  useEffect(() => {
-    document.title = "내 정보 - MovieJ";
-  }, []);
-
-  // 리뷰들의 포스터 가져오기
+  // 리뷰들의 포스터와 장르 데이터 가져오기
   const fetchPostersForReviews = async (reviewList: Review[]) => {
     const updatedReviews = await Promise.all(
       reviewList.map(async (review) => {
@@ -104,6 +124,43 @@ export default function MovieNotePage() {
     return updatedReviews;
   };
 
+  // 리뷰 작성한 영화들의 장르 집계
+  const calculateReviewGenres = async (reviewList: Review[]) => {
+    const genreCounts: { [key: string]: number } = {};
+
+    // 각 리뷰의 영화 장르 가져오기
+    await Promise.all(
+      reviewList.map(async (review) => {
+        try {
+          const movieData = await getMovieDetails(review.tmdbMovieId);
+          if (movieData.genres) {
+            movieData.genres.forEach((genre: { id: number; name: string }) => {
+              genreCounts[genre.name] = (genreCounts[genre.name] || 0) + 1;
+            });
+          }
+        } catch (error) {
+          console.error("영화 장르 가져오기 실패:", error);
+        }
+      })
+    );
+
+    // 장르별 개수 내림차순 정렬
+    const sortedGenres = Object.entries(genreCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5); // 상위 5개만
+
+    return {
+      labels: sortedGenres.map(([name]) => name),
+      data: sortedGenres.map(([, count]) => count),
+    };
+  };
+
+  const getGenreName = (genreId: number) => {
+    const genre = TMDB_GENRES.find((g) => g.id === genreId);
+    return genre?.name || `장르${genreId}`;
+  };
+
+
   // 사용자 프로필 데이터 가져오기
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -117,29 +174,32 @@ export default function MovieNotePage() {
 
       setIsLoadingProfile(true);
       try {
-        // userId 가져오기
         const userId = localStorage.getItem("userId");
+        
+        // 리뷰, 컬렉션, 온보딩 데이터 가져오기
+        const [reviewsResponse, wishlistData, onboardingResponse] = await Promise.all([
+          api.get("/reviews/my", {
+            params: {
+              email: userEmail,
+            },
+          }),
+          getWishlist(userEmail).catch(() => []),
+          userId
+            ? api
+                .get("/users/user-preferences/check", {
+                  params: { userId: parseInt(userId) },
+                })
+                .then((res) => res)
+                .catch(() => null)
+            : Promise.resolve(null),
+        ]);
 
-        // 리뷰, 컬렉션, 사용자 선호도 데이터 가져오기
-        const [reviewsResponse, wishlistData, preferencesResponse] =
-          await Promise.all([
-            api.get("/reviews/my", {
-              params: {
-                email: userEmail,
-              },
-            }),
-            getWishlist(userEmail).catch(() => []),
-            userId
-              ? api
-                  .get("/user/user-preferences/check", {
-                    params: { userId: parseInt(userId) },
-                  })
-                  .catch((err) => {
-                    console.log("선호도 데이터 없음:", err);
-                    return null;
-                  })
-              : Promise.resolve(null),
-          ]);
+        // 온보딩 데이터 확인
+        setHasOnboardingData(
+          onboardingResponse && 
+          onboardingResponse.status === 200 && 
+          onboardingResponse.data.genres?.length > 0
+        );
 
         const reviewData = Array.isArray(reviewsResponse.data)
           ? reviewsResponse.data
@@ -149,24 +209,10 @@ export default function MovieNotePage() {
         setUserReviews(reviewsWithPosters);
         setCollectionMovies(wishlistData);
 
-        // 사용자 선호도 저장
-        if (preferencesResponse && preferencesResponse.status === 200) {
-          setUserPreferences(preferencesResponse.data);
-          // 로컬스토리지에도 백업
-          localStorage.setItem(
-            "userPreferences",
-            JSON.stringify(preferencesResponse.data)
-          );
-        } else {
-          // API에 데이터가 없으면 로컬스토리지에서 가져오기
-          const savedPreferences = localStorage.getItem("userPreferences");
-          if (savedPreferences) {
-            try {
-              setUserPreferences(JSON.parse(savedPreferences));
-            } catch (e) {
-              console.error("선호도 데이터 파싱 실패:", e);
-            }
-          }
+        // 리뷰 기반 장르 데이터 계산
+        if (reviewData.length > 0) {
+          const genreData = await calculateReviewGenres(reviewData);
+          setReviewGenreData(genreData);
         }
 
         // 프로필 설정
@@ -286,22 +332,11 @@ export default function MovieNotePage() {
         <div className="p-8 ">
           <div className="flex items-center gap-6 mb-6">
             <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-700">
-              {userProfile.profileImage ?
-               (
-                <Image
-                  src={userProfile.profileImage}
-                  alt="프로필 이미지"
-                  width={96}
-                  height={96}
-                  className="w-full h-full object-cover rounded-full"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
-                  <span className="text-3xl font-bold text-white">
-                    {userProfile.username.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
+              <div className="w-full h-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
+                <span className="text-3xl font-bold text-white">
+                  {userProfile.username.charAt(0)}
+                </span>
+              </div>
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold mb-2">
@@ -380,20 +415,16 @@ export default function MovieNotePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* 선호 장르 차트 */}
                 <div>
-                  <h4 className="font-semibold mb-4">선호 장르 분석</h4>
-                  {userPreferences && userPreferences.genres.length > 0 ? (
+                  <h4 className="font-semibold mb-4">시청한 영화 장르 분석</h4>
+                  {reviewGenreData.labels.length > 0 && userReviews.length >= 3 ? (
                     <div className="h-64">
                       <Bar
                         data={{
-                          labels: userPreferences.genres.map(
-                            (g) => g.genreName
-                          ),
+                          labels: reviewGenreData.labels,
                           datasets: [
                             {
-                              label: "선호도",
-                              data: userPreferences.genres.map((_, index) =>
-                                Math.max(10 - index * 2, 1)
-                              ),
+                              label: "리뷰 작성한 영화 수",
+                              data: reviewGenreData.data,
                               backgroundColor: [
                                 "rgba(139, 92, 246, 0.8)",
                                 "rgba(168, 85, 247, 0.8)",
@@ -408,6 +439,19 @@ export default function MovieNotePage() {
                           plugins: {
                             legend: { display: false },
                             title: { display: false },
+                            tooltip: {
+                              backgroundColor: "rgba(17, 24, 39, 0.95)",
+                              titleColor: "#ffffff",
+                              bodyColor: "#ffffff",
+                              borderColor: "rgba(139, 92, 246, 0.5)",
+                              borderWidth: 1,
+                              padding: 12,
+                              callbacks: {
+                                label: function (context: any) {
+                                  return `${context.parsed.y}편의 영화`;
+                                },
+                              },
+                            },
                           },
                           scales: {
                             x: {
@@ -419,12 +463,17 @@ export default function MovieNotePage() {
                             },
                             y: {
                               beginAtZero: true,
-                              max: 10,
                               grid: { color: "rgba(75, 85, 99, 0.2)" },
                               ticks: {
                                 color: "#9CA3AF",
                                 font: { size: 11 },
-                                stepSize: 2,
+                                stepSize: 1,
+                                callback: function (value: any) {
+                                  if (Number.isInteger(value)) {
+                                    return value + "편";
+                                  }
+                                  return "";
+                                },
                               },
                               border: { display: false },
                             },
@@ -436,13 +485,51 @@ export default function MovieNotePage() {
                         }}
                       />
                     </div>
+                  ) : userReviews.length > 0 && userReviews.length < 3 ? (
+                    <div className="h-64 flex items-center justify-center text-gray-400">
+                      <div className="text-center">
+                        <p className="mb-2">
+                          분석하기엔 표본이 적습니다
+                        </p>
+                        <p className="text-sm text-gray-500 mb-4">
+                          최소 3편 이상의 영화 리뷰가 필요합니다 (현재: {userReviews.length}편)
+                        </p>
+                        <button
+                          onClick={() => router.push("/movies")}
+                          className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors"
+                        >
+                          영화 둘러보기
+                        </button>
+                      </div>
+                    </div>
+                  ) : !hasOnboardingData ? (
+                    <div className="h-64 flex items-center justify-center text-gray-400">
+                      <div className="text-center">
+                        <p className="mb-2">취향 설정이 필요합니다</p>
+                        <p className="text-sm text-gray-500 mb-4">
+                          온보딩에서 선호하는 장르, 배우, 영화를 설정해주세요
+                        </p>
+                        <button
+                          onClick={() => router.push("/onboarding")}
+                          className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors"
+                        >
+                          취향 설정하기
+                        </button>
+                      </div>
+                    </div>
                   ) : (
                     <div className="h-64 flex items-center justify-center text-gray-400">
                       <div className="text-center">
-                        <p className="mb-2">선호 장르 정보가 없습니다</p>
-                        <p className="text-sm">
-                          온보딩에서 취향을 설정해보세요
+                        <p className="mb-2">아직 리뷰가 없습니다</p>
+                        <p className="text-sm text-gray-500 mb-4">
+                          영화를 보고 리뷰를 작성해보세요
                         </p>
+                        <button
+                          onClick={() => router.push("/movies")}
+                          className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors"
+                        >
+                          영화 둘러보기
+                        </button>
                       </div>
                     </div>
                   )}
@@ -562,19 +649,21 @@ export default function MovieNotePage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-300 leading-relaxed">
-                      {userPreferences && userPreferences.genres.length > 0 ? (
+                      {reviewGenreData.labels.length > 0 ? (
                         <>
                           당신은{" "}
                           <span className="font-semibold text-violet-400">
-                            {userPreferences.genres
-                              .map((g) => g.genreName)
-                              .join(", ")}
+                            {reviewGenreData.labels.slice(0, 3).join(", ")}
                           </span>{" "}
-                          장르를 선호하시는군요!
+                          장르의 영화를 주로 시청하시는군요!
                           {userReviews.length > 0 && (
                             <>
                               {" "}
-                              평균 평점은{" "}
+                              총{" "}
+                              <span className="font-semibold text-blue-400">
+                                {userReviews.length}편
+                              </span>
+                              의 영화를 감상하셨고, 평균 평점은{" "}
                               <span className="font-semibold text-yellow-400">
                                 {(
                                   userReviews.reduce(
@@ -584,12 +673,12 @@ export default function MovieNotePage() {
                                 ).toFixed(1)}
                                 점
                               </span>
-                              으로, 작품을 선별적으로 감상하시는 스타일입니다.
+                              입니다.
                             </>
                           )}
                         </>
                       ) : (
-                        "취향분석을 통해 당신의 영화 취향을 분석하고 맞춤형 추천을 제공합니다."
+                        "영화를 시청하고 리뷰를 작성하면 당신의 영화 취향을 분석해드립니다."
                       )}
                     </p>
                   </div>

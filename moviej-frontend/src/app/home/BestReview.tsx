@@ -82,8 +82,9 @@ export default function BestReview() {
 
   // 캐러셀 인덱스 계산
   const getVisibleIndexes = () => {
+    if (imgCount === 0) return [];
     const arr = [];
-    for (let i = 0; i < itemsPerPage; i++) {
+    for (let i = 0; i < Math.min(itemsPerPage, imgCount); i++) {
       arr.push((startIdx + i) % imgCount);
     }
     return arr;
@@ -354,7 +355,7 @@ export default function BestReview() {
                 const review = reviews[idx];
                 return (
                   <Image
-                    key={review?.id || i}
+                    key={`review-${idx}-${review?.id || i}`}
                     src={
                       review?.tmdbMovieId && posters[review.tmdbMovieId]
                         ? posters[review.tmdbMovieId]

@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserPreferenceRepository extends JpaRepository<UserPreference, Long> {
+    
+    // EntityGraph 제거: MultipleBagFetchException 방지
+    // LAZY 로딩으로 N+1 발생 가능하지만, 필요 시 각각 별도 쿼리로 조회
     List<UserPreference> findByUserId(Long userId);
 
     // ✅ 가장 최근에 저장된 사용자 선호도 한 건만 조회

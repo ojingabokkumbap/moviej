@@ -34,6 +34,13 @@ public class MatchingScoreService {
             return 0.0;
         }
 
+        // ⭐ LAZY 로딩 명시적 초기화 (MultipleBagFetchException 방지)
+        preferences.forEach(pref -> {
+            if (pref.getGenres() != null) pref.getGenres().size();
+            if (pref.getActors() != null) pref.getActors().size();
+            if (pref.getMovies() != null) pref.getMovies().size();
+        });
+
         List<GenreInfo> allGenres = preferences.stream()
                 .flatMap(p -> p.getGenres().stream())
                 .filter(g -> g.getGenreId() != null && g.getGenreId() > 0)

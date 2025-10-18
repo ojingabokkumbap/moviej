@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -91,7 +93,7 @@ public class WishListService {
     }
 
     /**
-     * 찜 여부 확인
+     * 찜 여부 확인 (단건)
      */
     @Transactional(readOnly = true)
     public boolean isInWishList(String email, Long movieId) {
@@ -99,6 +101,28 @@ public class WishListService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         return userCollectionRepository.existsByUserIdAndMovieId(user.getId(), movieId);
+    }
+
+    /**
+     * 찜 여부 일괄 확인 (여러 영화를 한 번에 조회)
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, Boolean> checkWishListBatch(String email, List<Long> movieIds) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 사용자가 찜한 영화 ID 목록 조회 (1번의 쿼리)
+        List<UserCollection> wishLists = userCollectionRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        Set<Long> wishedMovieIds = wishLists.stream()
+                .map(UserCollection::getMovieId)
+                .collect(Collectors.toSet());
+
+        // 각 영화 ID에 대해 찜 여부 매핑
+        return movieIds.stream()
+                .collect(Collectors.toMap(
+                        movieId -> movieId,
+                        wishedMovieIds::contains
+                ));
     }
 
     /**

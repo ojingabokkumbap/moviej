@@ -65,7 +65,7 @@ public class WishListController {
     }
 
     /**
-     * 찜 여부 확인
+     * 찜 여부 확인 (단건)
      * GET /wishlist/check/{movieId}?email=test@example.com
      */
     @GetMapping("/check/{movieId}")
@@ -74,6 +74,20 @@ public class WishListController {
             @RequestParam String email) {
         boolean isInWishList = wishListService.isInWishList(email, movieId);
         return ResponseEntity.ok(Map.of("isInWishList", isInWishList));
+    }
+
+    /**
+     * 찜 여부 일괄 확인 (여러 영화)
+     * POST /wishlist/check-batch?email=test@example.com
+     * Body: { "movieIds": [1, 2, 3, 4, 5] }
+     */
+    @PostMapping("/check-batch")
+    public ResponseEntity<Map<Long, Boolean>> checkWishListBatch(
+            @RequestParam String email,
+            @RequestBody Map<String, List<Long>> request) {
+        List<Long> movieIds = request.get("movieIds");
+        Map<Long, Boolean> result = wishListService.checkWishListBatch(email, movieIds);
+        return ResponseEntity.ok(result);
     }
 
     /**

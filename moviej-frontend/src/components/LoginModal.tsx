@@ -75,6 +75,8 @@ export default function LoginModal({
         showNotification("로그인되었습니다.", "success");
         onClose();
 
+        window.location.reload();
+
         const userId = response.data.userId;
         if (userId) {
           try {

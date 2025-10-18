@@ -11,7 +11,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "genre_info")
+@Table(name = "user_preference_genre")
 public class GenreInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

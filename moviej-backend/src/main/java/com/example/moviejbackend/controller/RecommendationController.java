@@ -28,12 +28,17 @@ public class RecommendationController {
 					@RequestParam String email,
 					@RequestParam(defaultValue = "5") int count) {
 
+			System.out.println("🎬 추천 영화 API 호출: email=" + email + ", count=" + count);
+
 			// 1. 사용자 선호도 조회
 			User user = userRepository.findByEmail(email)
 							.orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다. email=" + email));
 
 			List<UserPreference> preferences = userPreferenceRepository.findByUserId(user.getId());
+			System.out.println("📊 UserPreference 개수: " + preferences.size());
+			
 			if (preferences.isEmpty()) {
+					System.out.println("⚠️ UserPreference가 비어있습니다!");
 					return ResponseEntity.ok(Collections.emptyList());
 			}
 
@@ -50,18 +55,27 @@ public class RecommendationController {
 							.map(a -> a.getActorId())
 							.collect(Collectors.toSet());
 
+			System.out.println("🎭 추출된 장르 ID: " + genreIds);
+			System.out.println("👥 추출된 배우 ID: " + actorIds);
+
 			// 3. TMDB에서 장르/배우별 영화 검색 (각각 1~2페이지, 중복 제거)
 			Set<TMDBMovieDto> candidateMovies = new HashSet<>();
 			
 			// 장르별 검색 (최대 3개 장르, 각 1페이지)
 			genreIds.stream().limit(3).forEach(genreId -> {
-					candidateMovies.addAll(tmdbService.searchMoviesByGenre(genreId, 1));
+					List<TMDBMovieDto> genreMovies = tmdbService.searchMoviesByGenre(genreId, 1);
+					System.out.println("🎬 장르 " + genreId + " 검색 결과: " + genreMovies.size() + "개");
+					candidateMovies.addAll(genreMovies);
 			});
 
 			// 배우별 검색 (최대 3명 배우, 각 1페이지)
 			actorIds.stream().limit(3).forEach(actorId -> {
-					candidateMovies.addAll(tmdbService.searchMoviesByActor(actorId, 1));
+					List<TMDBMovieDto> actorMovies = tmdbService.searchMoviesByActor(actorId, 1);
+					System.out.println("👤 배우 " + actorId + " 검색 결과: " + actorMovies.size() + "개");
+					candidateMovies.addAll(actorMovies);
 			});
+
+			System.out.println("📦 후보 영화 총 개수: " + candidateMovies.size());
 
 			// 4. 각 영화마다 매칭 점수 계산
 			List<TMDBMovieDto> scoredMovies = candidateMovies.stream()
@@ -73,6 +87,8 @@ public class RecommendationController {
 							.sorted((m1, m2) -> Double.compare(m2.getMatchingScore(), m1.getMatchingScore()))
 							.limit(count)
 							.collect(Collectors.toList());
+
+			System.out.println("✅ 최종 추천 영화: " + scoredMovies.size() + "개");
 
 			return ResponseEntity.ok(scoredMovies);
 	}
