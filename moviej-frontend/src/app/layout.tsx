@@ -7,6 +7,7 @@ import "@/app/globals.css";
 
 import Header from "@/components/header";
 import Footer from "@/components/Footer";
+import BackendWakeUp from "@/components/BackendWakeUp";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <title>이 페이지의 타이틀</title>
       <body>
         <NotificationProvider>
+          <BackendWakeUp />
           <Header />
           {children}
           <Footer />
