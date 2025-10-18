@@ -131,7 +131,7 @@ export default function MovieNotePage() {
             getWishlist(userEmail).catch(() => []),
             userId
               ? api
-                  .get("/user-preferences/check", {
+                  .get("/user/user-preferences/check", {
                     params: { userId: parseInt(userId) },
                   })
                   .catch((err) => {
