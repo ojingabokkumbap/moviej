@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import CirclePercentChart from "./CirclePercentChart";
 import { api } from "@/lib/api";
 
-export default function BoxOffice() {
+export default function BoxOffice({ isLoggedIn }: { isLoggedIn: boolean }) {
   const { boxOffice, movieDetails } = useMoviesKOFIC();
   const [posters, setPosters] = useState<string[]>([]);
   const router = useRouter();
@@ -31,11 +31,7 @@ export default function BoxOffice() {
   }>({});
   const PRELOAD_COUNT = 5; // 초기 로딩 시 미리 가져올 영화 개수
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
   useEffect(() => {
-    setIsLoggedIn(!!localStorage.getItem("userEmail"));
-
     async function fetchPostersAndInfos() {
       if (!boxOffice || boxOffice.length === 0) {
         setPosters([]);
@@ -109,7 +105,7 @@ export default function BoxOffice() {
       }
     }
     fetchPostersAndInfos();
-  }, [boxOffice, movieDetails]);
+  }, [boxOffice, movieDetails, isLoggedIn]); // isLoggedIn을 의존성에 추가하여 로그인 상태 변경 시 점수 재조회
 
   // Hover 시 취향 점수 개별 로딩
   const fetchMatchingScoreOnHover = async (actualIdx: number) => {
@@ -349,9 +345,11 @@ export default function BoxOffice() {
                               <div className="flex items-center justify-start">
                                 <p className="text-3xl font-semibold w-full text-left break-words flex items-end mb-1">
                                   {/* 영화 제목 */}
-                                  {
-                                    movieDetails[movieItem.movieCd]?.movieNm
-                                  }{" "}
+                                  {movieDetails[movieItem.movieCd]?.movieNm
+                                    ? movieDetails[movieItem.movieCd]?.movieNm
+                                        .split(":")[0]
+                                        .trim()
+                                    : ""}
                                   {/* 장르 */}
                                   <span className="border border-gray-100 px-[5px] py-[2px] text-xs ml-2 mb-1">
                                     {movieDetails[movieItem.movieCd]

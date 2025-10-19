@@ -70,9 +70,9 @@ public class MatchingScoreService {
                 : (matchActorCount * 100.0 / allActors.size());
 
         double baseScore = 20.0;
-        double matchingWeight = 0.4;
-        double publicWeight = 0.8;
-        double baseWeight = 0.1;
+        double matchingWeight = 0.25;
+        double publicWeight = 0.6;
+        double baseWeight = 0.15;
         double publicScore;
         if (tmdbMovieDto.getRating() == null || tmdbMovieDto.getRating() == 0.0) {
                 publicScore = 65.0; // 기본값(예: 5.0 * 10)

@@ -1,6 +1,8 @@
 package com.example.moviejbackend.service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -98,10 +100,21 @@ public class ReviewService {
         );
     }
 
-    // 전체 리뷰 좋아요순 조회 (메인페이지용 - 이메일 불필요)
+    // 전체 리뷰 좋아요순 조회 (메인페이지용 - 영화별로 공감 많은 리뷰 1개만)
     public List<ReviewResponseDto> getAllReviewsByLikes(int limit) {
-        List<Review> reviews = reviewRepository.findAllByOrderByLikesDescCreatedAtDesc();
-        return reviews.stream()
+        List<Review> allReviews = reviewRepository.findAllByOrderByLikesDescCreatedAtAsc();
+        
+        // 영화별로 가장 공감 많은 리뷰만 남기기 (공감 수 같으면 먼저 작성된 것)
+        Map<String, Review> movieBestReviewMap = new LinkedHashMap<>();
+        for (Review review : allReviews) {
+            String tmdbMovieId = review.getTmdbMovieId();
+            if (!movieBestReviewMap.containsKey(tmdbMovieId)) {
+                movieBestReviewMap.put(tmdbMovieId, review);
+            }
+        }
+        
+        // limit 적용 및 DTO 변환
+        return movieBestReviewMap.values().stream()
             .limit(limit)
             .map(review -> new ReviewResponseDto(
                 review.getId(),

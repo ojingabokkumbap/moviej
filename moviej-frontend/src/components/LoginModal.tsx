@@ -71,11 +71,12 @@ export default function LoginModal({
 
         console.log("저장된 userId:", localStorage.getItem("userId"));
 
+        // 같은 탭에서 로그인 상태 변경 감지를 위한 커스텀 이벤트 발생
+        window.dispatchEvent(new Event("loginStateChange"));
+        // 다른 탭을 위한 storage 이벤트도 발생
         window.dispatchEvent(new Event("storage"));
         showNotification("로그인되었습니다.", "success");
         onClose();
-
-        window.location.reload();
 
         const userId = response.data.userId;
         if (userId) {

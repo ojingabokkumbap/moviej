@@ -26,11 +26,10 @@ interface RecommendedMovie {
   matchingScore: number;
 }
 
-export default function TasteMovies() {
+export default function TasteMovies({ isLoggedIn }: { isLoggedIn: boolean }) {
   const router = useRouter();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [recommendedMovies, setRecommendedMovies] = useState<
     RecommendedMovie[]
   >([]);
@@ -58,8 +57,7 @@ export default function TasteMovies() {
 
       if (!isMounted) return; // 언마운트된 경우 중단
 
-      if (userEmail) {
-        setIsLoggedIn(true);
+      if (userEmail && isLoggedIn) {
         setIsLoading(true);
         setError(null);
 
@@ -74,10 +72,6 @@ export default function TasteMovies() {
           
           if (!isMounted) return; // 응답 받은 후 언마운트 체크
           
-          console.log("✅ 추천 영화 응답:", response.data);
-          console.log("📊 응답 데이터 타입:", typeof response.data, Array.isArray(response.data));
-          console.log("📊 응답 데이터 길이:", response.data?.length);
-          
           // 빈 배열 체크
           if (Array.isArray(response.data) && response.data.length === 0) {
             console.warn("⚠️ 추천 영화가 비어있습니다. 백엔드에서 UserPreference는 조회했지만 TMDB에서 영화를 찾지 못했을 수 있습니다.");
@@ -87,7 +81,7 @@ export default function TasteMovies() {
         } catch (error: any) {
           if (!isMounted) return;
           
-          console.error("❌ 추천 영화 조회 실패:", error);
+          console.error("추천 영화 조회 실패:", error);
           console.error("에러 상세:", error.response?.data || error.message);
           
           // MultipleBagFetchException 에러 감지
@@ -105,8 +99,8 @@ export default function TasteMovies() {
         }
       } else {
         if (isMounted) {
-          setIsLoggedIn(false);
           setIsLoading(false);
+          setRecommendedMovies([]);
         }
       }
     };
@@ -116,7 +110,7 @@ export default function TasteMovies() {
     return () => {
       isMounted = false; // cleanup 시 플래그 설정
     };
-  }, []); // ⭐ storage 이벤트 리스너 제거 (무한 루프 원인)
+  }, [isLoggedIn]); // ⭐ isLoggedIn prop을 의존성으로 추가하여 로그인 상태 변경시 재조회
 
   const movieCount = recommendedMovies.length;
 

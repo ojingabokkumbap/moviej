@@ -31,14 +31,22 @@ export default function UpcomingMovies() {
     fetchLogos();
   }, [upcomingMovies]);
 
-  const sortedMovies = upcomingMovies.filter((movie) => {
+const sortedMovies = upcomingMovies
+  .filter((movie) => {
     const today = new Date();
     const release = new Date(movie.release_date);
     const diff = Math.ceil(
       (release.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
     );
     return diff <= 100 && diff > 0;
+  })
+  .sort((a, b) => {
+    // 개봉일이 가까운 순으로 정렬
+    const aDate = new Date(a.release_date).getTime();
+    const bDate = new Date(b.release_date).getTime();
+    return aDate - bDate;
   });
+  
   const movieCount = sortedMovies.length;
 
   // idx 3개씩 움직이게 순환

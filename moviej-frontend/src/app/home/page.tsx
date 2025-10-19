@@ -19,6 +19,31 @@ export default function Home() {
   const [startIdx, setStartIdx] = useState(0);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(0);
   const [isMounted, setIsMounted] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // 로그인 상태 감지 (localStorage 변경 감지)
+  useEffect(() => {
+    // 최초 마운트 시 로그인 상태 확인
+    setIsLoggedIn(!!localStorage.getItem("token"));
+
+    // 같은 탭에서 localStorage 변경 감지를 위한 커스텀 이벤트
+    const handleLoginStateChange = () => {
+      setIsLoggedIn(!!localStorage.getItem("token"));
+    };
+    
+    // 다른 탭에서의 변경 감지 (storage 이벤트)
+    const handleStorageChange = () => {
+      setIsLoggedIn(!!localStorage.getItem("token"));
+    };
+    
+    window.addEventListener("loginStateChange", handleLoginStateChange);
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("loginStateChange", handleLoginStateChange);
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   // 페이지 타이틀 설정
   useEffect(() => {
@@ -420,10 +445,10 @@ export default function Home() {
             {todayStr}일 기준
           </span>
         </p>
-        <BoxOffice />
+        <BoxOffice isLoggedIn={isLoggedIn} />
       </div>
       <div className="w-full mb-10">
-        <TasteMovies />
+        <TasteMovies isLoggedIn={isLoggedIn} />
       </div>
       <div className="w-full ml-24 mb-10">
         <p className="text-3xl font-medium text-left mb-5">개봉 예정 영화</p>

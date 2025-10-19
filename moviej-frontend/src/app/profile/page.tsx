@@ -220,7 +220,7 @@ export default function MovieNotePage() {
           id: userData.id,
           username: userData.nickname || userData.email.split("@")[0],
           email: userData.email,
-          profileImage: userData.profileImage || "/images/default-avatar.jpg",
+          profileImage: userData.profileImage,
           createdAt: new Date(userData.createdAt),
           totalMoviesWatched: reviewData.length,
           averageRating:
@@ -231,7 +231,6 @@ export default function MovieNotePage() {
                 ) / reviewData.length
               : 0,
         });
-        setUserProfileImage(userData.profileImage || "/images/default-avatar.jpg");
       } catch (error) {
         console.error("프로필 로딩 실패:", error);
       } finally {
@@ -330,7 +329,7 @@ export default function MovieNotePage() {
         {/* 프로필 카드 */}
         <div className="p-8 ">
           <div className="flex items-center gap-6 mb-6">
-            <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-700">
+            <div className="h-20 w-20 bg-gradient-to-br from-violet-600 to-pink-600 rounded-full flex items-center justify-center overflow-hidden">
               {userProfileImage ? (
                 <Image
                   src={userProfileImage}
@@ -340,7 +339,7 @@ export default function MovieNotePage() {
                   className="w-full h-full object-cover rounded-full"
                 />
               ) : (
-                <span className="text-white font-medium">
+                <span className="text-white text-3xl font-semibold">
                   {userProfile.username.charAt(0)}
                 </span>
               )}
@@ -417,12 +416,12 @@ export default function MovieNotePage() {
         {activeTab === "dashboard" && (
           <div className="space-y-8">
             {/* 취향 분석 */}
-            <h3 className="text-xl font-bold mb-6">나의 영화 취향 분석</h3>
+            <h3 className="text-xl font-bold mb-6">영화 취향 분석</h3>
             <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* 선호 장르 차트 */}
                 <div>
-                  <h4 className="font-semibold mb-4">시청한 영화 장르 분석</h4>
+                  <h4 className="font-semibold mb-4">영화 장르 분석</h4>
                   {reviewGenreData.labels.length > 0 &&
                   userReviews.length >= 3 ? (
                     <div className="h-64">

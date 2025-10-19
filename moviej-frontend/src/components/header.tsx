@@ -389,6 +389,9 @@ export default function Header() {
                           setUserNickname(null); // 닉네임 상태 초기화
                           setUserProfileImage(null); // 프로필 이미지 상태 초기화
                           setIsProfileOpen(false); // 드롭다운 닫기
+                          // 같은 탭에서 로그인 상태 변경 감지를 위한 커스텀 이벤트 발생
+                          window.dispatchEvent(new Event("loginStateChange"));
+                          // 다른 탭을 위한 storage 이벤트도 발생
                           window.dispatchEvent(new Event("storage")); // 상태 동기화
                           router.push("/"); // 홈으로 이동
                           showNotification("로그아웃 되었습니다.", "info");
