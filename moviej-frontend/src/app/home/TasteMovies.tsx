@@ -169,33 +169,6 @@ export default function TasteMovies() {
       {isLoggedIn && (
         <div>
           <p className="text-3xl font-semibold text-left mb-5">내 취향 영화</p>
-          
-          {/* 에러 메시지 */}
-          {error && (
-            <div className="w-full p-4 mb-4 bg-red-900/50 border border-red-500 rounded-lg text-white">
-              <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
-                </svg>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold mb-1">추천 영화를 불러올 수 없습니다</p>
-                  <p className="text-xs text-gray-300">{error}</p>
-                  {error.includes("MultipleBagFetchException") && (
-                    <div className="mt-3 p-3 bg-yellow-900/30 border border-yellow-600/50 rounded text-xs">
-                      <p className="font-semibold text-yellow-400 mb-1">🛠️ 개발자 정보:</p>
-                      <p className="text-yellow-200">
-                        백엔드의 <code className="bg-black/30 px-1 py-0.5 rounded">UserPreference</code> 엔티티에서<br/>
-                        <code className="bg-black/30 px-1 py-0.5 rounded">@Fetch(FetchMode.SUBSELECT)</code> 어노테이션을 추가하거나<br/>
-                        <code className="bg-black/30 px-1 py-0.5 rounded">List → Set</code>으로 변경하거나<br/>
-                        <code className="bg-black/30 px-1 py-0.5 rounded">FetchType.EAGER → LAZY</code>로 변경해야 합니다.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-          
           {/* 로딩 중 */}
           {isLoading ? (
             <div className="w-full relative">
@@ -208,7 +181,7 @@ export default function TasteMovies() {
                 ))}
               </div>
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                <div className="flex items-center gap-2 text-gray-400">
+                <div className="flex items-center gap-2 text-gray-400 direct flex-col">
                   <svg
                     className="animate-spin h-5 w-5 text-violet-500"
                     xmlns="http://www.w3.org/2000/svg"
@@ -231,6 +204,10 @@ export default function TasteMovies() {
                   </svg>
                   <p className="text-base font-light">
                     개인화 맞춤 추천 영화를 탐색 중입니다.
+                    <br />
+                    <span className="text-sm text-gray-400">
+                      (서버의 리소스 제한으로 인해 최대 5분까지 지연될 수 있습니다.)
+                    </span>
                   </p>
                 </div>
               </div>

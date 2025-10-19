@@ -380,8 +380,9 @@ export default function MovieDetailPage() {
                     </button>
                   </div>
                   {/* 영화 정보 */}
-                  <div className="flex-1 pl-10">
-                    <div className="flex items-center">
+                  <div className="flex-1 pl-10 min-w-[1050px]">
+                    <div className="flex items-end justify-between">
+                      <div className="flex items-center">
                       <h1 className="text-4xl font-medium pl-3">
                         {movie.title}
                       </h1>
@@ -395,6 +396,10 @@ export default function MovieDetailPage() {
                             {genre.name}
                           </span>
                         ))}
+                      </div>
+                      </div>
+                      <div>
+                        <span className="text-gray-400 font-light text-xs">*영화정보: TMDB</span>
                       </div>
                     </div>
                     {/* 기본 정보 */}
@@ -468,13 +473,13 @@ export default function MovieDetailPage() {
                     {/* 줄거리 */}
                     <div className="flex shadow-[0_0.3px_0_0_#d4d4d8] min-h-[280px]">
                       <div className="w-9/12 pr-3">
-                        <h2 className="text-xl mr-2 font-medium mb-3 pl-3 text-gray-200">
+                        <h2 className="text-base mr-2 font-medium mb-1 pl-3 text-gray-200">
                           줄거리
                         </h2>
                         <div className="font-light leading-relaxed pl-3 min-h-[140px]">
                           {movie.overview || "줄거리 정보가 없습니다."}
                         </div>
-                        <h2 className="text-xl mr-2 font-medium mt-3 mb-3 text-gray-200 pl-3">
+                        <h2 className="text-base mr-2 font-medium mt-3 mb-2 text-gray-200 pl-3">
                           출연진
                         </h2>
                         <div className="flex gap-6 mb-5 flex-wrap pl-3 min-w-[630px] max-w-[63s0px]">
@@ -490,8 +495,8 @@ export default function MovieDetailPage() {
                                       className="rounded-full object-cover"
                                     />
                                   ) : (
-                                    <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
-                                      <span className="text-gray-400 text-xs">
+                                    <div className="w-10 h-10 bg-gray-500 rounded-full flex items-center justify-center">
+                                      <span className="text-gray-300 text-xs">
                                         사진없음
                                       </span>
                                     </div>
@@ -744,16 +749,6 @@ export default function MovieDetailPage() {
                               fill
                               className="object-cover group-hover:scale-105 transition-transform duration-300"
                             />
-                            <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded flex items-center">
-                              <svg
-                                className="w-3 h-3 mr-1"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path d="M10 15l-5.878 3.09 1.122-6.545L.488 6.91l6.561-.955L10 0l2.951 5.955 6.561.955-4.756 4.635 1.122 6.545z" />
-                              </svg>
-                              {movie.vote_average.toFixed(1)}
-                            </div>
                           </div>
                           <div className="font-medium text-sm group-hover:text-violet-400 transition-colors flex justify-between">
                             <p>{movie.title}</p>
@@ -805,7 +800,7 @@ export default function MovieDetailPage() {
                         reviews.slice(0, 4).map((review) => (
                           <div
                             key={review.id}
-                            className="bg-zinc-800 bg-opacity-60 rounded-lg w-1/4"
+                            className="bg-gray-800 bg-opacity-70 rounded-lg w-1/4 border border-gray-700 hover:border-violet-500 transition-colors flex flex-col justify-between h-full"
                           >
                             {/* 헤더 - 프로필 정보 */}
                             <div className="flex items-center justify-between px-8 py-4">

@@ -297,10 +297,26 @@ export async function fetchDetailedMovieCredits(movieId: string) {
  */
 export async function fetchSimilarMovies(movieId: string) {
   const res = await fetch(
-    `https://api.themoviedb.org/3/movie/${movieId}/similar?api_key=${apiKey}&language=ko-KR&page=1`
+    `https://api.themoviedb.org/3/movie/${movieId}/similar?api_key=${apiKey}&language=ko-KR&region=KR&page=1`
   );
+
   const data = await res.json();
-  return data.results;
+
+  const currentYear = new Date().getFullYear();
+  const filtered = (data.results || [])
+    .filter((movie: { release_date: string; vote_average: number; popularity: number; title: string; }) => {
+      // 개봉일이 없으면 제외
+      if (!movie.release_date) return false;
+      const year = parseInt(movie.release_date.slice(0, 4), 10);
+      if (year < currentYear - 25 ) return false;
+      // 제목에 한글이 포함되어 있지 않으면 제외
+      if (!/[가-힣]/.test(movie.title)) return false;
+      return true;
+    })
+    .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
+    .slice(0, 12);
+
+  return filtered;
 }
 
 /**

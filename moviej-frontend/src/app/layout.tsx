@@ -7,16 +7,17 @@ import "@/app/globals.css";
 
 import Header from "@/components/header";
 import Footer from "@/components/Footer";
-import BackendWakeUp from "@/components/BackendWakeUp";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
+    
     <html lang="ko">
-      <title>이 페이지의 타이틀</title>
+      <head>
+        <meta name="viewport" content="width=1920, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+      </head>
       <body>
         <NotificationProvider>
-          <BackendWakeUp />
           <Header />
           {children}
           <Footer />

@@ -23,6 +23,10 @@ interface Review {
   liked?: boolean;
 }
 
+interface MovieDetail {
+  poster_path: string;
+}
+
 function ReviewsPage() {
   const searchParams = useSearchParams();
   const { showNotification } = useNotification();
@@ -31,6 +35,7 @@ function ReviewsPage() {
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [sortBy, setSortBy] = useState<"latest" | "popular">("latest");
+  const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [posters, setPosters] = useState<{ [key: string]: string }>({});
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -52,6 +57,20 @@ function ReviewsPage() {
   });
 
   // 초기 데이터 로드
+  useEffect(() => {
+    setReviews([]);
+    setPage(0);
+    setHasMore(true);
+    fetchInitialData();
+  }, [movieId]);
+
+  // inView가 true가 되면 추가 데이터 로드
+  useEffect(() => {
+    if (inView && hasMore && !loading && reviews.length > 0) {
+      fetchMoreData();
+    }
+  }, [inView, hasMore, loading]);
+
   const fetchInitialData = async () => {
     setLoading(true);
     try {
@@ -70,8 +89,8 @@ function ReviewsPage() {
           responses.data.content ? !responses.data.last : reviewData.length >= 5
         );
 
-        // 영화 데이터는 사용하지 않으므로 제거
-        await getMovieDetails(movieId);
+        const movieData = await getMovieDetails(movieId);
+        setMovie(movieData);
       } else {
         const responses = await api.get("/reviews", {
           params: {
@@ -138,23 +157,6 @@ function ReviewsPage() {
       setLoading(false);
     }
   };
-
-  // 초기 데이터 로드
-  useEffect(() => {
-    setReviews([]);
-    setPage(0);
-    setHasMore(true);
-    fetchInitialData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [movieId]);
-
-  // inView가 true가 되면 추가 데이터 로드
-  useEffect(() => {
-    if (inView && hasMore && !loading && reviews.length > 0) {
-      fetchMoreData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inView, hasMore, loading, reviews.length]);
 
   // 리뷰들의 포스터 가져오기
   const fetchPostersForReviews = async (reviewList: Review[]) => {

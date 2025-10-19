@@ -10,6 +10,7 @@ export default function CirclePercentChart({
   label?: string; // 중앙에 표시할 텍스트 (기본: percent%)
 }) {
   // size에 따라 동적으로 계산
+  const backgroundStrokeWidth = Math.max(size * 0.06, 4.5);
   const strokeWidth = Math.max(size * 0.08, 6); // 최소 6px, size에 따라 비례
   const radius = size / 2 - strokeWidth / 2;
   const normalizedRadius = radius;
@@ -28,9 +29,9 @@ export default function CirclePercentChart({
       >
         {/* 배경 원 */}
         <circle
-          stroke="#D2D2D2"
+          stroke="#DBD2E8"
           fill="transparent"
-          strokeWidth={strokeWidth}
+          strokeWidth={backgroundStrokeWidth}
           r={normalizedRadius}
           cx={size / 2}
           cy={size / 2}

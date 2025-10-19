@@ -664,9 +664,6 @@ export default function MoviesPage() {
                     {movie.title}
                   </h3>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-yellow-400">
-                      ★ {movie.vote_average?.toFixed(1)}
-                    </span>
                     <span className="text-gray-300">
                       {movie.release_date?.slice(0, 4)}
                     </span>

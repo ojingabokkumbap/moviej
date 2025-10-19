@@ -33,7 +33,7 @@ interface UserProfile {
   username: string;
   email: string;
   profileImage: string;
-  joinDate: Date;
+  createdAt: Date;
   totalMoviesWatched: number;
   averageRating: number;
 }
@@ -106,6 +106,8 @@ export default function MovieNotePage() {
     data: number[];
   }>({ labels: [], data: [] });
 
+  const [userProfileImage, setUserProfileImage] = useState<string | null>(null);
+
   // 리뷰들의 포스터와 장르 데이터 가져오기
   const fetchPostersForReviews = async (reviewList: Review[]) => {
     const updatedReviews = await Promise.all(
@@ -160,13 +162,10 @@ export default function MovieNotePage() {
     return genre?.name || `장르${genreId}`;
   };
 
-
-  // 사용자 프로필 데이터 가져오기
+  // 사용자 프로필 데이터 가져오기 (로컬스토리지 대신 서버에서)
   useEffect(() => {
     const fetchUserProfile = async () => {
       const userEmail = localStorage.getItem("userEmail");
-      const userNickname = localStorage.getItem("userNickname");
-
       if (!userEmail) {
         router.push("/");
         return;
@@ -174,56 +173,55 @@ export default function MovieNotePage() {
 
       setIsLoadingProfile(true);
       try {
-        const userId = localStorage.getItem("userId");
-        
-        // 리뷰, 컬렉션, 온보딩 데이터 가져오기
-        const [reviewsResponse, wishlistData, onboardingResponse] = await Promise.all([
-          api.get("/reviews/my", {
-            params: {
-              email: userEmail,
-            },
-          }),
-          getWishlist(userEmail).catch(() => []),
-          userId
-            ? api
-                .get("/users/user-preferences/check", {
-                  params: { userId: parseInt(userId) },
-                })
-                .then((res) => res)
-                .catch(() => null)
-            : Promise.resolve(null),
-        ]);
+        // 1. 서버에서 유저 정보 가져오기
+        const userResponse = await api.get(`/users/${userEmail}`);
+        const userData = userResponse.data;
 
-        // 온보딩 데이터 확인
+        // 2. 리뷰, 컬렉션, 온보딩 데이터 가져오기
+        const userId = userData.id;
+        const [reviewsResponse, wishlistData, onboardingResponse] =
+          await Promise.all([
+            api.get("/reviews/my", {
+              params: { email: userEmail },
+            }),
+            getWishlist(userEmail).catch(() => []),
+            userId
+              ? api
+                  .get("/users/user-preferences/check", {
+                    params: { userId: userId },
+                  })
+                  .then((res) => res)
+                  .catch(() => null)
+              : Promise.resolve(null),
+          ]);
+
         setHasOnboardingData(
-          onboardingResponse && 
-          onboardingResponse.status === 200 && 
-          onboardingResponse.data.genres?.length > 0
+          Boolean(
+            onboardingResponse &&
+              onboardingResponse.status === 200 &&
+              onboardingResponse.data.genres?.length > 0
+          )
         );
 
         const reviewData = Array.isArray(reviewsResponse.data)
           ? reviewsResponse.data
           : [reviewsResponse.data];
-        // 리뷰에 포스터 추가
         const reviewsWithPosters = await fetchPostersForReviews(reviewData);
         setUserReviews(reviewsWithPosters);
         setCollectionMovies(wishlistData);
 
-        // 리뷰 기반 장르 데이터 계산
         if (reviewData.length > 0) {
           const genreData = await calculateReviewGenres(reviewData);
           setReviewGenreData(genreData);
         }
 
-        // 프로필 설정
+        // 3. 서버에서 받은 데이터로 프로필 설정
         setUserProfile({
-          id: userEmail,
-          username: userNickname || userEmail.split("@")[0],
-          email: userEmail,
-          profileImage:
-            localStorage.getItem("userProfileImage") ||
-            "/images/default-avatar.jpg",
-          joinDate: new Date(localStorage.getItem("joinDate") || Date.now()),
+          id: userData.id,
+          username: userData.nickname || userData.email.split("@")[0],
+          email: userData.email,
+          profileImage: userData.profileImage || "/images/default-avatar.jpg",
+          createdAt: new Date(userData.createdAt),
           totalMoviesWatched: reviewData.length,
           averageRating:
             reviewData.length > 0
@@ -233,6 +231,7 @@ export default function MovieNotePage() {
                 ) / reviewData.length
               : 0,
         });
+        setUserProfileImage(userData.profileImage || "/images/default-avatar.jpg");
       } catch (error) {
         console.error("프로필 로딩 실패:", error);
       } finally {
@@ -300,9 +299,9 @@ export default function MovieNotePage() {
 
   const getActivityDays = () => {
     if (!userProfile) return 0;
-    const joinDate = userProfile.joinDate;
+    const createdAt = userProfile.createdAt;
     const today = new Date();
-    const diffTime = Math.abs(today.getTime() - joinDate.getTime());
+    const diffTime = Math.abs(today.getTime() - createdAt.getTime());
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
@@ -332,18 +331,26 @@ export default function MovieNotePage() {
         <div className="p-8 ">
           <div className="flex items-center gap-6 mb-6">
             <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-700">
-              <div className="w-full h-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
-                <span className="text-3xl font-bold text-white">
+              {userProfileImage ? (
+                <Image
+                  src={userProfileImage}
+                  alt="프로필 이미지"
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <span className="text-white font-medium">
                   {userProfile.username.charAt(0)}
                 </span>
-              </div>
+              )}
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold mb-2">
                 {userProfile.username}
               </h2>
               <div className="flex text-gray-400 flex-col">
-                <span>가입일 {userProfile.joinDate.toLocaleDateString()}</span>
+                <span>가입일 {userProfile.createdAt.toLocaleDateString()}</span>
                 <span>활동 {getActivityDays()}일째</span>
               </div>
             </div>
@@ -416,7 +423,8 @@ export default function MovieNotePage() {
                 {/* 선호 장르 차트 */}
                 <div>
                   <h4 className="font-semibold mb-4">시청한 영화 장르 분석</h4>
-                  {reviewGenreData.labels.length > 0 && userReviews.length >= 3 ? (
+                  {reviewGenreData.labels.length > 0 &&
+                  userReviews.length >= 3 ? (
                     <div className="h-64">
                       <Bar
                         data={{
@@ -488,11 +496,10 @@ export default function MovieNotePage() {
                   ) : userReviews.length > 0 && userReviews.length < 3 ? (
                     <div className="h-64 flex items-center justify-center text-gray-400">
                       <div className="text-center">
-                        <p className="mb-2">
-                          분석하기엔 표본이 적습니다
-                        </p>
+                        <p className="mb-2">분석하기엔 표본이 적습니다</p>
                         <p className="text-sm text-gray-500 mb-4">
-                          최소 3편 이상의 영화 리뷰가 필요합니다 (현재: {userReviews.length}편)
+                          최소 3편 이상의 영화 리뷰가 필요합니다 (현재:{" "}
+                          {userReviews.length}편)
                         </p>
                         <button
                           onClick={() => router.push("/movies")}
@@ -651,7 +658,7 @@ export default function MovieNotePage() {
                     <p className="text-sm text-gray-300 leading-relaxed">
                       {reviewGenreData.labels.length > 0 ? (
                         <>
-                          당신은{" "}
+                          {userProfile.username}님은{" "}
                           <span className="font-semibold text-violet-400">
                             {reviewGenreData.labels.slice(0, 3).join(", ")}
                           </span>{" "}
@@ -678,7 +685,7 @@ export default function MovieNotePage() {
                           )}
                         </>
                       ) : (
-                        "영화를 시청하고 리뷰를 작성하면 당신의 영화 취향을 분석해드립니다."
+                        "영화를 평가하면 당신의 영화 취향을 분석해드립니다."
                       )}
                     </p>
                   </div>
