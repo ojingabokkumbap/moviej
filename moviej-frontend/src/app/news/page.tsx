@@ -195,11 +195,6 @@ export default function NewsPage() {
         {/* 인기 기사 섹션 (조회수 상위 2개) */}
         {popularNews.length > 0 && (
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <span className="bg-gradient-to-r from-violet-500 to-pink-500 text-transparent bg-clip-text">
-              🔥 지금 뜨는 기사
-              </span>
-            </h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {popularNews.map((article) => (
                 <Link
