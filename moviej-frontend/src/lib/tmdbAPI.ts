@@ -313,7 +313,7 @@ export async function fetchSimilarMovies(movieId: string) {
       if (!/[가-힣]/.test(movie.title)) return false;
       return true;
     })
-    .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
+    .sort((a: { popularity: any; }, b: { popularity: any; }) => (b.popularity ?? 0) - (a.popularity ?? 0))
     .slice(0, 12);
 
   return filtered;
